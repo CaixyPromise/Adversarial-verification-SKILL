@@ -1,0 +1,4 @@
+interface:
+  display_name: "Adversarial Verification"
+  short_description: "Independent verifier for non-trivial code changes."
+  default_prompt: "Independently verify this implementation, try to break it, and return PASS/FAIL/PARTIAL with command evidence."
