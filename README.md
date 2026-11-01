@@ -25,10 +25,13 @@ It reviews whether an implementation meets the **actual user intent**, preserves
 
 A third verifier is also allowed for a 4–5 score when a distinct material risk justifies it. **Three is a cap, not a quota**; do not assign multiple agents the same question. Serious security/authorization, data-integrity, financial or irreversible operations receive elevated scrutiny even for short diffs. If business rules are materially unclear, clarify the decision instead of guessing.
 
-Example three-way split:
-- Reviewer A: user requirements, critical business flow and invariants.
-- Reviewer B: security, data integrity, state transitions or concurrency.
-- Reviewer C: integration, compatibility, regressions and operations.
+### Reviewer roles and how they review
+
+- **A — Requirement correctness:** independently derive acceptance criteria and business invariants, trace the full intended journey and find semantic mistakes or missing scenarios.
+- **B — Implementation consistency:** inspect existing and relevant historical implementations, compare established code and **business logic**, locate unintended duplication or drift, and recommend reuse **only when semantics and ownership justify it**.
+- **C — System engineering:** assess applicable performance, security, long-term maintenance, system compatibility and distributed failure/concurrency risks using targeted probes.
+
+With **one** reviewer, cover all three lenses in proportion to risk. With **two**, default to A and combined B+C (or split differently for the dominant risk); parent checks gaps. With **three**, assign A/B/C separately. Role-specific investigation guidance is in `references/review-playbook.md`. No role is a reason to demand refactoring purely for reuse.
 
 ## Result format
 
@@ -44,7 +47,7 @@ One broad review round is the default. Fixes receive targeted re-verification of
 ## Files
 
 - `SKILL.md` — authoritative workflow and 0–3 agent allocation.
-- `references/review-playbook.md` — optional domain-specific probes, read only when relevant.
+- `references/review-playbook.md` — role-specific investigation methods and optional engineering probes.
 - `references/security-review-checklist.md` — optional security guidance.
 - `agents/openai.yaml` — skill interface metadata.
 

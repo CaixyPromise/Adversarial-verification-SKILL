@@ -3,6 +3,8 @@
 ## 0.2.0 — 2026-11-01
 
 - Make requirements, business flows and invariants the source of review truth.
+- Define complementary reviewer roles: A requirement correctness, B current/historical implementation consistency with pragmatic reuse, C system-level security/performance/maintenance/distributed risks.
+- Add role-specific investigation methods and coverage merging for 0/1/2/3 verifier allocations.
 - Add 0–6 risk scoring and adaptive **0–3 verifier subagent** allocation (three maximum, never a quota).
 - Replace indefinite FAIL/review loops with one coverage-first round, targeted re-verification and explicit stopping conditions.
 - Distinguish evidence-backed blockers, improvements and unverified risks; introduce READY / CHANGES_NEEDED / NEEDS_DECISION / PARTIAL delivery assessments.

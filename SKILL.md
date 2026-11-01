@@ -20,7 +20,7 @@ Derive a short review brief from the original request, acceptance criteria, proj
 - **Flow:** Which entry points, decisions, state transitions, side effects, and upstream/downstream paths are affected?
 - **Unknowns:** Which assumptions could change whether the implementation is correct?
 
-Do not treat existing tests, the implementation summary, or the current code behavior as the specification. Independently verify important assumptions against sources.
+Do not treat existing tests, the implementation summary, or the current code behavior as the specification. Independently verify important assumptions against sources. Inspect relevant existing implementations (and historical changes when useful) to understand established contracts and why designs evolved; **history is evidence, not an unquestionable requirement**.
 
 Resolve ordinary uncertainty from available evidence. **Ask the human before deciding** only when a material product/business rule cannot be established and different interpretations change the implementation or review outcome. State the exact decision and plausible alternatives. Do not invent a rule or endlessly interrogate the user.
 
@@ -45,7 +45,36 @@ Total **0–6**; this is a heuristic, not a proof of risk.
 
 **Maximum: 3 verifier subagents per review round.** Counts refer to verifier subagents; the parent agent is not an extra verifier. Use fewer when scopes cannot be meaningfully separated, resources are unavailable, or the change does not justify them. At score 4–5, a third verifier is allowed only for a clearly distinct material risk. Critical security, authorization, financial, privacy, or irreversible-data changes require elevated scrutiny even if few lines change; typically at least two complementary reviews when subagents are available.
 
-Example split for three: **(1) requirements/business flow, (2) security/state/concurrency/data integrity, (3) regression/integration/operational behavior**. Adapt to the change; never launch duplicate reviewers to read the same diff with the same question. Every verifier receives the original request, relevant business rules, changed code, and its distinct scope, without the implementer's confidence or desired verdict.
+### Distinct reviewer responsibilities
+
+For substantial changes, divide review into **three complementary lenses**, not three copies of the same review:
+
+- **Agent A — Requirement & behavior correctness:** Independently reconstruct user intent, acceptance criteria, business flow and invariants. Trace entry points, decisions, state changes and external effects. Find omitted requirements, incorrect semantics and invalid state transitions. Do not infer product rules solely from the new implementation.
+- **Agent B — Implementation consistency & pragmatic reuse:** Trace changed symbols beyond the diff; compare similar **current and prior implementations**, shared utilities, established contracts and relevant Git history when available. Detect duplicated *business rules* as well as code, semantic divergence, avoidable parallel paths, and incompatible integration patterns. **Prefer reuse only where behavior, ownership and evolution genuinely align; never demand abstraction or reuse for its own sake.** Historical code may also contain defects or obsolete decisions.
+- **Agent C — System-level engineering risk:** Trace the change through technical boundaries and production assumptions. Inspect relevant security and authorization, performance/scalability, resource lifecycle, long-term maintenance, compatibility, and—when applicable—distributed concurrency, retries, idempotency, partial failures, data consistency and recovery. Test the **highest-risk failure mechanisms**, not every conceivable category.
+
+**Assignment when fewer than three verifiers are warranted:**
+- **0:** Parent checks the direct outcome; do not invent subagent work.
+- **1:** One verifier covers A + B + C **proportionately**, emphasizing material risk.
+- **2:** Assign A and a combined B + C reviewer by default; split B versus C differently if one dominates. Parent checks that no material lens was omitted.
+- **3:** Assign A, B and C separately. Each gets a distinct scope and produces independent findings.
+
+These are review lenses, **not fixed agent classes or compulsory checklists**. Avoid redundant code reading; when relevant, agents may share pointers to evidence while reaching independent conclusions. Every verifier receives the original request, relevant requirements/invariants, changed code and assigned role(s), **without** the implementer's confidence or preferred verdict.
+
+Use this concise dispatch contract rather than separate specialized prompt templates:
+
+```text
+Review role(s): [A / B / C and concrete focus]
+Original user request and acceptance criteria: [...]
+Known business invariants and unknowns: [...]
+Changed paths and implementation summary: [...]
+Relevant repository instructions and safe verification commands: [...]
+Deliver: scoped coverage, evidence-backed blocking defects,
+non-blocking improvements, unverified risks, and verification limits.
+Independently inspect applicable surrounding code/history; do not edit.
+```
+
+For concrete investigation tactics, read your assigned role section in `references/review-playbook.md`.
 
 If subagents are not available, do a scoped self-review and disclose the lack of independent verification.
 
@@ -53,14 +82,14 @@ If subagents are not available, do a scoped self-review and disclose the lack of
 
 Inspect the actual changed behavior and its meaningful blast radius **before** finalizing findings. Start with requirement and flow correctness; then selectively check:
 
-- missing or distorted behavior; violated invariants and acceptance criteria
-- callers, callees, compatibility, neighboring flows and regressions
-- boundary inputs, errors, repeated requests, invalid states and recovery
-- applicable security, data integrity, concurrency, performance, resource lifecycle and operability risks
+- **A:** missing or distorted requirements, incorrect business flow, violated invariants and acceptance criteria
+- **B:** existing and earlier equivalent implementations, duplicated or diverging business logic, unnecessary reinvention, compatibility with established module contracts
+- **C:** relevant security, data integrity, performance, concurrency/distributed failure, resource lifecycle, upgrade compatibility and production maintainability risks
+- across roles: callers, callees, neighboring regressions, invalid states, boundary inputs, error paths, and **whether tests could detect the actual defect**
 
 Use the most informative feasible evidence: code-path analysis, focused tests, direct execution, runtime outputs/logs, or relevant existing test suites. A direct run is strongly preferred for executable behavioral changes but not mandatory for documentation/config-only changes or unsafe environments. Do not treat green tests, HTTP 200, or exit status 0 as sufficient evidence of business correctness.
 
-**Do not stop at the first one or two bugs.** Finish the applicable risk areas, combine subagent results, remove duplicates, challenge weak findings, and present one coherent set. Aim for sufficient coverage, not an impossible guarantee of finding every bug. State meaningful gaps.
+**Do not stop at the first one or two bugs.** Finish each assigned material risk area, combine subagent results, remove duplicates, challenge weak findings and report one coherent set. In particular, **compare implementation consistency against existing patterns before recommending new abstractions or duplicate logic**. The parent reconciles disagreements using requirements and evidence, not majority voting. Aim for sufficient coverage, not an impossible guarantee of finding every bug. State meaningful gaps.
 
 Read `references/review-playbook.md` only for relevant probing tactics. For security-sensitive changes, also use `references/security-review-checklist.md`.
 
@@ -92,7 +121,7 @@ Use exactly one delivery assessment:
 - `NEEDS_DECISION` — a material business/product decision blocks a sound conclusion.
 - `PARTIAL` — necessary verification is unavailable or incomplete; describe what is and is not supported.
 
-Finish concisely with: **requirement/flow understood, risk score and verifier allocation, inspected scope, findings with evidence, residual risks, final assessment**. No artificial PASS quotas or repeated full-review gates.
+Finish concisely with: **requirement/flow understood, risk score and role-based verifier allocation, coverage of A/B/C as applicable, findings with evidence, residual risks, final assessment**. No artificial PASS quotas or repeated full-review gates.
 
 ## Safety boundaries
 
