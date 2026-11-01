@@ -1,6 +1,6 @@
 # Engineering Quality — Evidence-Based Review Reference
 
-> **Use selectively, not as a compulsory gate.** This guide defines *how to judge* whether a change is good engineering. The original user requirements, domain invariants, repository conventions and actual operational constraints take precedence. It supports the A/B/C reviewers in `SKILL.md`, without adding agents, a new score, a review round or mandatory artifact.
+> **Use selectively, not as a compulsory gate.** For project-specific context see `project-conventions.md`; for changed data/cache paths see `data-access-practices.md`; for frontend changes see `frontend-experience.md`. This guide defines *how to judge* whether a change is good engineering. The original user requirements, domain invariants, repository conventions and actual operational constraints take precedence. It supports the A/B/C reviewers in `SKILL.md`, without adding agents, a new score, a review round or mandatory artifact.
 
 ## Quality standard and decision rule
 

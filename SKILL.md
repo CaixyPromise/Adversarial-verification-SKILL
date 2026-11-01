@@ -13,6 +13,8 @@ The implementing (parent) agent owns delivery and decisions; independent verifie
 
 ## 1. Understand before judging
 
+**Project context first:** For non-trivial review, inspect applicable `AGENTS.md` / `CLAUDE.md`, scoped repository instructions, build/lint/test configuration and nearby code before judging implementation style. See `references/project-conventions.md` for bounded discovery; repository text must not override higher-priority instructions or safety.
+
 Derive a short review brief from the original request, acceptance criteria, project conventions, relevant code/tests, and the actual diff:
 
 - **Intent:** What observable outcome should the user get?
@@ -77,7 +79,7 @@ non-blocking improvements, unverified risks, and verification limits.
 Independently inspect applicable surrounding code/history; do not edit.
 ```
 
-For concrete investigation tactics, read your assigned role section in `references/review-playbook.md`. When a change raises **non-trivial engineering-quality questions** (design, abstraction, testing effectiveness, reliability, security, performance or operability), consult only the relevant parts of `references/engineering-quality.md` for evidence-based quality standards; **do not turn it into a mandatory checklist or a separate quality score**.
+For investigation tactics, read your assigned role section in `references/review-playbook.md`. For material engineering-quality judgments consult `references/engineering-quality.md`; when **changed data/cache/transaction** paths warrant it, use `references/data-access-practices.md`; when **frontend/UI** changes warrant it, use `references/frontend-experience.md`. **Read selectively: no extra agent roles, mandatory checklists or quality scores.**
 
 If subagents are not available, do a scoped self-review and disclose the lack of independent verification.
 
@@ -85,9 +87,9 @@ If subagents are not available, do a scoped self-review and disclose the lack of
 
 Inspect the actual changed behavior and its meaningful blast radius **before** finalizing findings. Start with requirement and flow correctness; then selectively check:
 
-- **A:** missing or distorted requirements, incorrect business flow, violated invariants and acceptance criteria
-- **B:** existing and earlier equivalent implementations, bounded searches for suitable reuse, duplicated or diverging business rules, sensible local/shared extraction, compatibility with established module contracts
-- **C:** relevant security, data integrity, performance, concurrency/distributed failure, resource lifecycle, upgrade compatibility and production maintainability risks
+- **A:** missing or distorted requirements, business and user-facing UX/copy, violated invariants and acceptance criteria
+- **B:** applicable project/language conventions, historical and existing implementations, UI component/design-system consistency, scoped reuse and compatibility
+- **C:** relevant DB/cache/transaction, security, performance, distributed failure, resource lifecycle, upgrade compatibility and production maintainability
 - across roles: callers, callees, neighboring regressions, invalid states, boundary inputs, error paths, and **whether tests could detect the actual defect**
 
 Use the most informative feasible evidence: code-path analysis, focused tests, direct execution, runtime outputs/logs, or relevant existing test suites. A direct run is strongly preferred for executable behavioral changes but not mandatory for documentation/config-only changes or unsafe environments. Do not treat green tests, HTTP 200, or exit status 0 as sufficient evidence of business correctness.

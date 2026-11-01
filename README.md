@@ -52,7 +52,10 @@ For review evidence, costs and repair history, use the standard-library helper `
 
 - `SKILL.md` — authoritative workflow and 0–3 agent allocation.
 - `references/review-playbook.md` — role-specific investigation methods and optional engineering probes.
-- `references/engineering-quality.md` — evidence-based engineering-quality principles adapted from public industry references; consult only when relevant.
+- `references/engineering-quality.md` — evidence-based engineering-quality principles.
+- `references/project-conventions.md` — applicable repository/agent instructions, language and toolchain constraints.
+- `references/data-access-practices.md` — N+1, indexes, transactions, deadlocks, cache consistency.
+- `references/frontend-experience.md` — theme/component reuse, plain-language UX and no leaked conversation notes in UI.
 - `references/security-review-checklist.md` — optional security guidance.
 - `agents/openai.yaml` — skill interface metadata.
 - `scripts/review_report.py` and `templates/review-report.html` — offline task dossier generator and static report template.

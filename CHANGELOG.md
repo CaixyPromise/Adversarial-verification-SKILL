@@ -2,6 +2,9 @@
 
 ## 0.2.0 — 2026-11-01
 
+- Add optional project, data-access/cache and frontend-experience review references, grounded in project and official framework conventions.
+- Ensure final UI titles, subtitles and labels communicate product functionality rather than rejected conversation-specific implementation alternatives; preserve necessary factual/audit records.
+
 - Add optional `references/engineering-quality.md`: sourced engineering-quality criteria for correctness, architecture, reuse, testing, security, reliability, performance, and operability; explicitly reject checklist-driven PASS chasing and unsupported style blockers.
 
 - Reopen previously resolved findings without creating new IDs or losing repair history.
