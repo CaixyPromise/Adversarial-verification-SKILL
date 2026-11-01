@@ -4,7 +4,7 @@ Use only the role sections and probes relevant to the change. These are **reason
 
 ## Common method for every verifier
 
-1. Establish the **expected behavior** from the original requirement, business rules and trusted contracts; do not copy the implementer's conclusion.
+1. **Derive a provisional expected behavior and critical invariants independently** from the original requirement and trusted contracts, *before treating implementation notes as persuasive evidence*. Resolve ambiguities using real product and repository evidence; do not assume old code or tests are the specification.
 2. Map the change to its **real execution/data path**, including relevant surrounding code, not just modified lines.
 3. Form the strongest realistic **failure hypothesis**; inspect or probe it using safe, high-signal evidence.
 4. Finish the **relevant coverage** before delivering a consolidated report. Distinguish confirmed defects, design tradeoffs and unknowns.
@@ -85,8 +85,19 @@ An optional refactor must not silently expand the user's requested change. Repor
 
 Do not automatically run every build, test suite or category for every task. Use the cheapest **reliable falsification** of the material risks; document skipped high-impact coverage.
 
+## Change attribution — compare against the baseline
+
+Before classifying a discovered problem as a new regression, use the cheapest credible comparison: relevant `git diff` / base commit code, existing equivalent paths, or the same focused test/behavior before and after the change **when safe and feasible**.
+
+- **Introduced:** present only after the change → prioritize as a review finding.
+- **Worsened:** an existing issue becomes materially worse because of the change → identify the new impact and scope.
+- **Pre-existing:** observable before the change → separate unrelated technical debt from issues that directly block the requested outcome. Critical old security/data risks still merit prompt escalation.
+- **Unknown:** no reliable baseline or enough evidence → label uncertainty; do not assert change causation.
+
+Do **not** turn an unrelated historic defect into a required refactor for the current task. Do not ignore a previously existing defect if it defeats the requested feature or a necessary safety boundary. Keep the evaluation focused on the actual change.
+
 ## Cross-agent synthesis and targeted re-verification
 
 When multiple reviewers find the same root cause, **merge** their evidence rather than counting two bugs. When they disagree, trace the requirement and code path; the parent arbitrates with evidence, not votes. Parent verifies that A/B/C relevant scopes were covered even when only one or two reviewers were assigned.
 
-Report each blocking finding as **violated requirement/invariant → trigger/code path → expected/actual evidence → impact → smallest sound repair**. Keep improvements and unverified possibilities separate. After repair, rerun the relevant failure probe plus the affected regression paths. Do not force all reviewers to repeat a complete review merely to change the final assessment.
+Report each blocking finding as **violated requirement/invariant → trigger/code path → expected/actual evidence → change attribution → impact → smallest sound repair**. Keep improvements and unverified possibilities separate. After repair, rerun the relevant failure probe plus the affected regression paths. Do not force all reviewers to repeat a complete review merely to change the final assessment.

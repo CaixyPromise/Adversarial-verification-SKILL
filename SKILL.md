@@ -20,7 +20,7 @@ Derive a short review brief from the original request, acceptance criteria, proj
 - **Flow:** Which entry points, decisions, state transitions, side effects, and upstream/downstream paths are affected?
 - **Unknowns:** Which assumptions could change whether the implementation is correct?
 
-Do not treat existing tests, the implementation summary, or the current code behavior as the specification. Independently verify important assumptions against sources. Inspect relevant existing implementations (and historical changes when useful) to understand established contracts and why designs evolved; **history is evidence, not an unquestionable requirement**.
+**Independence first:** Before adopting the implementer's summary or rationale, derive a *provisional* expected behavior and critical invariants directly from the original request and trusted product/contracts evidence. Then inspect the implementation and revise the expectation only when independent evidence warrants it. Do not treat existing tests, the implementation summary, or current code behavior as the specification. Inspect relevant existing implementations (and history when useful) for established contracts; **history is evidence, not unquestionable authority**.
 
 Resolve ordinary uncertainty from available evidence. **Ask the human before deciding** only when a material product/business rule cannot be established and different interpretations change the implementation or review outcome. State the exact decision and plausible alternatives. Do not invent a rule or endlessly interrogate the user.
 
@@ -69,7 +69,8 @@ Use this concise dispatch contract rather than separate specialized prompt templ
 Review role(s): [A / B / C and concrete focus]
 Original user request and acceptance criteria: [...]
 Known business invariants and unknowns: [...]
-Changed paths and implementation summary: [...]
+Changed paths: [...]
+Implementation summary (context only; never the expected answer): [...]
 Relevant repository instructions and safe verification commands: [...]
 Deliver: scoped coverage, evidence-backed blocking defects,
 non-blocking improvements, unverified risks, and verification limits.
@@ -106,6 +107,8 @@ Report a blocking defect only with:
 
 For executed checks, give commands and observed results. For code-only analysis, give specific locations and reasoning, **not fabricated execution evidence**.
 
+**Attribute findings to the change.** Where feasible, compare the pre-change baseline (base branch/commit, existing tests or previous behavior) against the proposed change and label each meaningful finding **introduced**, **worsened**, **pre-existing**, or **attribution unknown**. Do not presume every discovered issue was caused by the diff. Prioritize introduced/worsened defects and any pre-existing defect that directly prevents the requested behavior. Report unrelated historical debt separately; do not expand the implementation scope to fix it without authorization. Urgently surface serious existing security/data risks through the appropriate owner/escalation path, but do not automatically blame or block this change solely because the risk predates it. If the baseline cannot be checked, state the attribution uncertainty rather than guessing.
+
 Group results as **Blocking defects**, **Non-blocking improvements**, and **Unverified risks/assumptions**. Style preferences, speculative vulnerabilities, or unproven hypotheticals are not blockers. Confirmed critical/high security issues and material business/integrity failures are blockers. State uncertainty instead of inventing certainty.
 
 ## 5. Repair, reverify, and stop
@@ -123,7 +126,7 @@ Use exactly one delivery assessment:
 - `NEEDS_DECISION` — a material business/product decision blocks a sound conclusion.
 - `PARTIAL` — necessary verification is unavailable or incomplete; describe what is and is not supported.
 
-Finish concisely with: **requirement/flow understood, risk score and role-based verifier allocation, coverage of A/B/C as applicable, findings with evidence, residual risks, final assessment**. No artificial PASS quotas or repeated full-review gates.
+Finish concisely with: **independently established requirement/flow, risk score and role-based verifier allocation, A/B/C coverage as applicable, findings with evidence and change attribution, residual risks, final assessment**. No artificial PASS quotas or repeated full-review gates.
 
 ## Safety boundaries
 

@@ -40,7 +40,7 @@ With **one** reviewer, cover all three lenses in proportion to risk. With **two*
 - `NEEDS_DECISION`: a material business/product decision is missing.
 - `PARTIAL`: required evidence or verification environment is unavailable.
 
-These are **delivery assessments**, not mathematical claims of correctness or production approval. Every blocking finding needs a specific violated rule, trigger, code/runtime evidence, impact, and repair direction. Improvements and open hypotheses are separate.
+These are **delivery assessments**, not mathematical claims of correctness or production approval. Reviewers **independently derive expected behavior** from the request and trusted contracts before accepting the implementer's rationale. Where feasible, compare baseline and changed behavior and label findings **introduced / worsened / pre-existing / unknown**. Keep unrelated existing problems out of the current repair scope while escalating serious historical safety issues. Every blocking finding needs a specific violated rule, trigger, code/runtime evidence, impact, and repair direction. Improvements and open hypotheses are separate.
 
 One broad review round is the default. Fixes receive targeted re-verification of the issue and affected paths. After two unsuccessful repair cycles for the same blocker, stop automatic looping and escalate with evidence.
 
