@@ -12,9 +12,9 @@ Reports are pairs of review-<task>-<hash>.json and .html. **Calling start again 
 
 ## Minimal command sequence
 
-Run the tool from the repo containing the installed skill, using the **target project's path**. Commands below assume the script path is available as \`python3 /path/to/skill/scripts/review_report.py\`.
+Run the tool from the repo containing the installed skill, using the **target project's path**. Commands below assume the script path is available as `python3 /path/to/skill/scripts/review_report.py`.
 
-\`\`\`bash
+```bash
 R=python3
 S=/path/to/skill/scripts/review_report.py
 P=/path/to/target-project
@@ -26,20 +26,20 @@ $R "$S" --project "$P" finding --task-id "$ID" --title "Missing ownership check"
 $R "$S" --project "$P" fix --task-id "$ID" --id F001 --status verified --actor parent --description "Added server-side owner validation" --verification "Unauthorized request now rejected; regression suite passed"
 $R "$S" --project "$P" event --task-id "$ID" --kind test --text "Ran targeted integration checks"
 $R "$S" --project "$P" finish --task-id "$ID" --assessment READY --summary "Critical paths verified; no known blockers"
-\`\`\`
+```
 
 The commands print existing JSON/HTML paths. Open HTML directly in a browser. The HTML allows search, severity/status/attribution filtering, finding expansion, per-round review, print/PDF, and JSON export. JSON is the authoritative structured record.
 
 ## Division of responsibility
 
 - **Reviewer(s):** add/update findings with **evidence, severity, change attribution and a proposed fix**. Do not claim a fix was applied.
-- **Parent/implementer:** after an actual change, use \`fix\` on the *same finding ID*, recording the actual repair and verification result; add concise events for tests, decisions or material activity. Never rewrite proposals to look like fixes.
-- **Parent on exit:** call \`finish\` to store actual end time, assessment and short summary. Later reviews call \`start\` with the same ID and update the same report. If a title/category already exists, the script automatically reuses the previous finding ID. Use explicit --id for stable tracking if titles change.
+- **Parent/implementer:** after an actual change, use `fix` on the *same finding ID*, recording the actual repair and verification result; add concise events for tests, decisions or material activity. Never rewrite proposals to look like fixes.
+- **Parent on exit:** call `finish` to store actual end time, assessment and short summary. Later reviews call `start` with the same ID and update the same report. If a title/category already exists, the script automatically reuses the previous finding ID. Use explicit --id for stable tracking if titles change. If a previously fixed/verified issue appears again, the same ID is reopened; prior repair records remain available.
 
 ## Telemetry provenance and accuracy
 
 - Start/end timestamps and round elapsed durations are measured only between **script invocations**; this is a *recorded review window*, not a guaranteed measure of human/AI active effort.
-- Token numbers are **optional**. Only pass \`--input-tokens\`, \`--output-tokens\` and \`--token-source\` on \`finish\` when trustworthy runtime telemetry is available. The helper never calls a model, introspects private runtime counters or estimates tokens. Unavailable data remains **unknown**, not zero. HTML totals clearly show the number of rounds with complete usage data.
+- Token numbers are **optional**. Only pass `--input-tokens`, `--output-tokens` and the required `--token-source` on `finish` when trustworthy runtime telemetry is available. The helper never calls a model, introspects private runtime counters or estimates tokens. Unavailable data remains **unknown**, not zero. HTML totals clearly show the number of rounds with complete usage data.
 - Counts represent **deduplicated findings across the task**, not the total number of mentions across rounds. Each fix appends a durable repair record.
 - The JSON/HTML may contain sensitive snippets: keep them local, do not upload/commit without explicit user request. Avoid pasting secrets or personal data into finding text.
 

@@ -242,13 +242,14 @@ def cmd_finding(args, data):
                          if normalized(f["title"]) == normalized(args.title)
                          and normalized(f["category"]) == normalized(args.category)), None)
     if selected:
+        was_resolved = selected["status"] in ("fixed", "verified", "wontfix")
         selected.update({
             "title": args.title, "category": args.category, "severity": args.severity,
             "attribution": args.attribution, "evidence": args.evidence,
             "proposal": args.proposal, "reviewer": args.reviewer,
-            "last_seen_round": session["round"]
+            "status": "open", "last_seen_round": session["round"]
         })
-        action = "updated_existing_finding"
+        action = "reopened_existing_finding" if was_resolved else "updated_existing_finding"
     else:
         seq = max([int(f["id"][1:]) for f in data["findings"] if re.fullmatch(r"F\d+", f["id"])] or [0]) + 1
         selected = {
@@ -260,6 +261,8 @@ def cmd_finding(args, data):
         }
         data["findings"].append(selected)
         action = "created_finding"
+    session["events"].append({"at": now(), "kind": "review",
+                              "text": selected["id"] + ": " + action + " — " + args.title})
     return {"action": action, "finding_id": selected["id"]}
 
 
@@ -274,6 +277,8 @@ def cmd_fix(args, data):
         "description": args.description, "verification": args.verification,
         "actor": args.actor
     })
+    session["events"].append({"at": now(), "kind": "fix",
+                              "text": args.id + " → " + args.status + ": " + args.description})
     return {"action": "recorded_fix", "finding_id": args.id, "status": args.status}
 
 
@@ -285,13 +290,17 @@ def cmd_event(args, data):
 
 def cmd_finish(args, data):
     session = active_session(data)
+    if args.input_tokens is not None or args.output_tokens is not None:
+        if not args.token_source:
+            raise ValueError("--token-source is required when recording token usage.")
+        if any(v is not None and v < 0 for v in (args.input_tokens, args.output_tokens)):
+            raise ValueError("Token usage cannot be negative.")
+        session["input_tokens"] = args.input_tokens
+        session["output_tokens"] = args.output_tokens
+        session["token_source"] = args.token_source
     session["ended_at"] = now()
     session["assessment"] = args.assessment
     session["summary"] = args.summary or ""
-    if args.input_tokens is not None or args.output_tokens is not None:
-        session["input_tokens"] = args.input_tokens
-        session["output_tokens"] = args.output_tokens
-        session["token_source"] = args.token_source or "supplied by operator"
     return {"action": "finished_round", "round": session["round"], "assessment": args.assessment}
 
 

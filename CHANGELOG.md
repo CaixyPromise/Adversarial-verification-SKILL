@@ -2,6 +2,8 @@
 
 ## 0.2.0 — 2026-11-01
 
+- Reopen previously resolved findings without creating new IDs or losing repair history.
+- Require explicit token provenance when recording actual usage, and reject negative counts.
 - Add an optional offline review dossier: one reusable JSON + interactive static HTML per task across multiple rounds, with evidence, proposals, applied fixes, re-verification, timestamp provenance and optional measured tokens.
 - Protect archives from Git tracking through local info/exclude, reuse existing skill archive directories, and provide a dependency-free Python generator.
 
