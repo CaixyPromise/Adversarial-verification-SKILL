@@ -2,6 +2,8 @@
 
 ## 0.2.0 — 2026-11-01
 
+- Add optional `references/engineering-quality.md`: sourced engineering-quality criteria for correctness, architecture, reuse, testing, security, reliability, performance, and operability; explicitly reject checklist-driven PASS chasing and unsupported style blockers.
+
 - Reopen previously resolved findings without creating new IDs or losing repair history.
 - Require explicit token provenance when recording actual usage, and reject negative counts.
 - Add an optional offline review dossier: one reusable JSON + interactive static HTML per task across multiple rounds, with evidence, proposals, applied fixes, re-verification, timestamp provenance and optional measured tokens.

@@ -77,7 +77,7 @@ non-blocking improvements, unverified risks, and verification limits.
 Independently inspect applicable surrounding code/history; do not edit.
 ```
 
-For concrete investigation tactics, read your assigned role section in `references/review-playbook.md`.
+For concrete investigation tactics, read your assigned role section in `references/review-playbook.md`. When a change raises **non-trivial engineering-quality questions** (design, abstraction, testing effectiveness, reliability, security, performance or operability), consult only the relevant parts of `references/engineering-quality.md` for evidence-based quality standards; **do not turn it into a mandatory checklist or a separate quality score**.
 
 If subagents are not available, do a scoped self-review and disclose the lack of independent verification.
 

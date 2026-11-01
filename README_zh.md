@@ -58,6 +58,7 @@ Verifier 必须**先根据原始需求和可信契约独立推导预期行为**�
 
 - `SKILL.md`：唯一核心执行规则与 Agent 分配策略。
 - `references/review-playbook.md`：A/B/C 角色审查思路与按需使用的技术验证方法。
+- `references/engineering-quality.md`：结合 Google、Microsoft、AWS、OWASP、ISO 等公开实践，指导 Agent 判断高质量实现；仅按需阅读，不新增硬性审查流程。
 - `references/security-review-checklist.md`：安全敏感需求可选参考。
 - `agents/openai.yaml`：Agent 展示与默认指令。
 - `scripts/review_report.py`、`templates/review-report.html`：本地静态报告生成脚本与模板。
