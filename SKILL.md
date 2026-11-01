@@ -24,6 +24,8 @@ Do not treat existing tests, the implementation summary, or the current code beh
 
 Resolve ordinary uncertainty from available evidence. **Ask the human before deciding** only when a material product/business rule cannot be established and different interpretations change the implementation or review outcome. State the exact decision and plausible alternatives. Do not invent a rule or endlessly interrogate the user.
 
+**Uncertainty is not solved by adding reviewers.** When unresolved business ambiguity would change the expected behavior or verdict, first narrow it using repository/product evidence, then request the minimal human decision if still material. Do not escalate agent count *solely* because the uncertainty score is high; assess independent technical risk after identifying the ambiguity.
+
 ## 2. Assess risk and allocate agents
 
 Score each axis **0–2**, based on the change and its context:
@@ -50,7 +52,7 @@ Total **0–6**; this is a heuristic, not a proof of risk.
 For substantial changes, divide review into **three complementary lenses**, not three copies of the same review:
 
 - **Agent A — Requirement & behavior correctness:** Independently reconstruct user intent, acceptance criteria, business flow and invariants. Trace entry points, decisions, state changes and external effects. Find omitted requirements, incorrect semantics and invalid state transitions. Do not infer product rules solely from the new implementation.
-- **Agent B — Implementation consistency & pragmatic reuse:** Trace changed symbols beyond the diff; compare similar **current and prior implementations**, shared utilities, established contracts and relevant Git history when available. Detect duplicated *business rules* as well as code, semantic divergence, avoidable parallel paths, and incompatible integration patterns. **Prefer reuse only where behavior, ownership and evolution genuinely align; never demand abstraction or reuse for its own sake.** Historical code may also contain defects or obsolete decisions.
+- **Agent B — Implementation consistency & pragmatic reuse:** Trace changed symbols beyond the diff; compare similar **current and prior implementations**, shared utilities, established contracts and relevant Git history when useful. Search progressively: **changed module → direct callers/dependencies → relevant shared code → selective history**; stop once evidence is sufficient. Detect duplicated *business rules* as well as code, semantic divergence, avoidable parallel paths, and incompatible integration patterns. Prefer existing compatible utilities, then module-local extraction; consider a shared utility package only for repeatedly needed, stable, genuinely cross-module technical behavior. Keep business rules in their owning domain service/policy rather than generic utilities. **Prefer reuse only where semantics, ownership, dependency direction and evolution align; never abstract or consolidate for its own sake.** Historical code may contain obsolete decisions or defects.
 - **Agent C — System-level engineering risk:** Trace the change through technical boundaries and production assumptions. Inspect relevant security and authorization, performance/scalability, resource lifecycle, long-term maintenance, compatibility, and—when applicable—distributed concurrency, retries, idempotency, partial failures, data consistency and recovery. Test the **highest-risk failure mechanisms**, not every conceivable category.
 
 **Assignment when fewer than three verifiers are warranted:**
@@ -83,7 +85,7 @@ If subagents are not available, do a scoped self-review and disclose the lack of
 Inspect the actual changed behavior and its meaningful blast radius **before** finalizing findings. Start with requirement and flow correctness; then selectively check:
 
 - **A:** missing or distorted requirements, incorrect business flow, violated invariants and acceptance criteria
-- **B:** existing and earlier equivalent implementations, duplicated or diverging business logic, unnecessary reinvention, compatibility with established module contracts
+- **B:** existing and earlier equivalent implementations, bounded searches for suitable reuse, duplicated or diverging business rules, sensible local/shared extraction, compatibility with established module contracts
 - **C:** relevant security, data integrity, performance, concurrency/distributed failure, resource lifecycle, upgrade compatibility and production maintainability risks
 - across roles: callers, callees, neighboring regressions, invalid states, boundary inputs, error paths, and **whether tests could detect the actual defect**
 

@@ -25,18 +25,40 @@ Use only the role sections and probes relevant to the change. These are **reason
 
 ## Agent B — Implementation consistency & pragmatic reuse
 
-**Question:** Does this implementation fit the *actual* codebase, including prior solutions and established business semantics?
+**Question:** Does the new code fit established implementation and business semantics without unnecessary duplication or premature abstraction?
 
-1. Start at the changed symbols/interfaces. Follow relevant callers, callees, data models, contracts and tests.
-2. Search **current repository implementations** of the same or analogous behavior, including common helpers, domain services, policies, adapters and error handling. Look for duplicated **business decisions** as well as repeated code.
-3. When a relevant design is unclear or has evolved, selectively inspect **Git history / blame / prior fixes** (read-only, if available); do not exhaustively mine history for a trivial diff.
-4. Compare **semantic equivalence**, not names or syntax: input conditions, outputs, authorization, ownership, side effects, transactional boundaries, error rules and lifecycle. Ask whether the new path changes a rule that existing paths still rely on.
-5. Recommend reuse **only when** the existing abstraction really represents the same concept, its owner and dependency direction are appropriate, and expected evolution is aligned. Prefer minimal local code when shared abstraction would introduce coupling or conceal distinct domain semantics.
-6. Check that integrations and tests preserve established contracts. Identify accidental parallel implementations, drift and needless complexity, but **do not fail a change for cosmetic differences or simple duplication alone**.
+### Bounded search: expand only when evidence warrants it
 
-**Useful evidence:** repository-wide symbol references, comparable code paths, existing tests, call graphs where available, `git log`/`git blame` for relevant context. A historical implementation is **not automatically correct**, and an old pattern may have been deliberately replaced. If history is unavailable, review current code and state that limitation.
+1. **Changed module:** inspect related functions, services, adapters, tests and local helpers.
+2. **Direct callers/dependencies:** follow affected contracts, shared data models and nearby similar behavior.
+3. **Relevant shared code:** search for an existing suitable utility, domain service, policy or library; avoid unrestricted repository-wide exploration unless a concrete cross-module concern justifies it.
+4. **Selective history:** use relevant `git log`, `git blame` or prior fixes only when the design rationale, compatibility or a regression cannot be explained by current code. History is evidence, **not authority**.
 
-**Deliver:** consistency/compatibility findings, proven duplicated/diverging business logic, justified reuse opportunity versus deliberate separation, evidence and maintenance impact.
+**Stop expanding the search** when enough evidence exists to assess behavioral consistency and choose a reasonable reuse direction. Do not repeatedly mine history for speculative refactoring opportunities.
+
+### Compare semantics before recommending reuse
+
+Compare input/output contracts, validation, error behavior, authorization, domain ownership, state transitions, side effects, transaction boundaries, lifecycle and change expectations. Similar names or code shape **do not** imply equivalent behavior. Conversely, different implementations of the same business rule may indicate harmful drift.
+
+### Progressive reuse and extraction
+
+Prefer the **smallest sound design** supported by real reuse or maintenance evidence:
+
+| Evidence | Preferred direction |
+| --- | --- |
+| Existing implementation already provides the **same semantics** | **Reuse directly**, preserving its contract and ownership |
+| Repeated stable logic **inside one module** | Consider a module-local helper/service or extraction, if it reduces actual maintenance cost |
+| Stable **technical utility** repeatedly needed by independent modules | Consider a shared utility/package with clear ownership, dependency direction, tests and version/compatibility expectations |
+| Duplicated **business decision** across callers | Consider a shared **domain service/policy** owned by the relevant domain, not a generic `Utils` bucket |
+| Superficially similar implementations with distinct rules, evolution or ownership | **Keep separate**; favor simple local code over coupling |
+
+No fixed duplicate count mandates extraction. Several recurring independent uses, repeated fixes, divergence or measurable maintenance burden are **signals**, not automatic triggers. If a repository has no common utility package, **do not create one merely for one or two helpers**; propose a focused shared package only when recurring cross-module usage and stable semantics justify its cost. Avoid dumping unrelated functions into one global utility module or creating dependency cycles.
+
+An optional refactor must not silently expand the user's requested change. Report non-blocking reuse opportunities separately unless duplication causes a **demonstrable correctness, compatibility or material maintenance failure**.
+
+**Useful evidence:** targeted symbol/reference searches, call/data flow, comparable implementations, existing tests and selective read-only history. If history is unavailable, use current code and disclose the limit.
+
+**Deliver:** behavioral and contract consistency, confirmed duplicated/diverging business logic, concrete reuse/extraction opportunities with tradeoffs, and reasons to intentionally leave code separate.
 
 ## Agent C — System-level engineering risk
 

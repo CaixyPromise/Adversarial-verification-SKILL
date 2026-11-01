@@ -23,12 +23,12 @@ It reviews whether an implementation meets the **actual user intent**, preserves
 | 4–5 | 2 | Business flow and a distinct technical risk |
 | 6 | 3 | Complementary business, safety/state and regression perspectives |
 
-A third verifier is also allowed for a 4–5 score when a distinct material risk justifies it. **Three is a cap, not a quota**; do not assign multiple agents the same question. Serious security/authorization, data-integrity, financial or irreversible operations receive elevated scrutiny even for short diffs. If business rules are materially unclear, clarify the decision instead of guessing.
+A third verifier is also allowed for a 4–5 score when a distinct material risk justifies it. **Three is a cap, not a quota**; do not assign multiple agents the same question. Serious security/authorization, data-integrity, financial or irreversible operations receive elevated scrutiny even for short diffs. If business rules are materially unclear, resolve them from evidence or ask for a decision before multiplying reviewers; ambiguity alone does not justify more agents.
 
 ### Reviewer roles and how they review
 
 - **A — Requirement correctness:** independently derive acceptance criteria and business invariants, trace the full intended journey and find semantic mistakes or missing scenarios.
-- **B — Implementation consistency:** inspect existing and relevant historical implementations, compare established code and **business logic**, locate unintended duplication or drift, and recommend reuse **only when semantics and ownership justify it**.
+- **B — Implementation consistency:** search progressively (changed module → direct dependencies → relevant shared code → selective history), compare established code and business semantics, and prefer existing reuse or module-local extraction. A shared utility package is appropriate only when stable cross-module technical behavior recurs; shared business rules belong in domain services/policies. **Never abstract merely because code looks similar.**
 - **C — System engineering:** assess applicable performance, security, long-term maintenance, system compatibility and distributed failure/concurrency risks using targeted probes.
 
 With **one** reviewer, cover all three lenses in proportion to risk. With **two**, default to A and combined B+C (or split differently for the dominant risk); parent checks gaps. With **three**, assign A/B/C separately. Role-specific investigation guidance is in `references/review-playbook.md`. No role is a reason to demand refactoring purely for reuse.
