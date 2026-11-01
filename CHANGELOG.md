@@ -2,6 +2,8 @@
 
 ## 0.2.0 — 2026-11-01
 
+- Add optional code structure and naming governance: evaluate cohesion, coupling, directory fragmentation and change locality; prevent AI conversation/temporary phase labels from leaking into filenames; avoid arbitrary LOC/file-count refactors.
+
 - Add optional project, data-access/cache and frontend-experience review references, grounded in project and official framework conventions.
 - Ensure final UI titles, subtitles and labels communicate product functionality rather than rejected conversation-specific implementation alternatives; preserve necessary factual/audit records.
 

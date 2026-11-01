@@ -6,7 +6,7 @@
 
 1. Find **applicable** agent/repository instructions for the changed paths: `AGENTS.md` (plural), `CLAUDE.md`, `.github/copilot-instructions.md`, matching `.github/instructions/*.instructions.md`, `CONTRIBUTING.md`, nearby README/architecture docs and ADRs, when present. Inspect path-local rules and their scopes. The actual coding runtime determines instruction precedence; **repository text never overrides higher-priority instructions or safety**.
 2. Identify language/framework/runtime **versions and toolchain** from `package.json`/lockfile/`tsconfig`, `pom.xml`/Gradle, `go.mod`, `Cargo.toml`, `CMakeLists.txt`, `.editorconfig`, linters, formatting, testing, CI and relevant framework configurations. Never assume all versions are latest.
-3. Inspect **nearby maintained analogous code** for domain boundaries, ownership, async patterns, errors, logging, naming, validation, style and tests. Historical behavior is context but may be defective or obsolete.
+3. Inspect **nearby maintained analogous code** for domain boundaries, file and directory naming, ownership, async patterns, errors, logging, validation, style and tests. Check whether a proposed file extraction, merge or rename fits the existing module organization. Historical behavior is context but may be defective or obsolete.
 4. Consult **version-appropriate official** language/framework guidance only if the project is unclear or a material technical risk warrants checking a documented contract. Stop searching once the relevant constraints are established.
 
 Precedence for **engineering judgment**, subject to runtime authority: higher-priority instructions and safety → explicit authorized requirements → applicable local project instructions/configs → evidenced existing conventions → general best practices. If two material valid constraints conflict, state the conflict and ask for a decision; never silently change business semantics.
@@ -22,7 +22,7 @@ Precedence for **engineering judgment**, subject to runtime authority: higher-pr
 | Python | Exceptions, resource context management, typing expectations, sync/async behavior, environment/dependencies |
 | SQL / migrations | Existing-data compatibility, rollback/rolling-deployment needs, query plans and constraints (see `data-access-practices.md`) |
 
-Do not turn language idioms into automatic blockers. Linters/formatters handle mechanical style; Reviewer B focuses on actual semantics, maintainability and project consistency.
+Do not turn language idioms, filename conventions or size heuristics into automatic blockers. Linters/formatters handle mechanical style; Reviewer B focuses on actual semantics, maintainability and project consistency. Consult `code-structure-governance.md` only when organization or naming presents material risk.
 
 **Role guidance:** A understands expected behavior and acceptance; B checks language conventions and reuse; C checks operational/runtime boundaries. For a trivial edit, no exhaustive instruction hunt is needed.
 

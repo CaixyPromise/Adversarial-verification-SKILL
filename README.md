@@ -28,7 +28,7 @@ A third verifier is also allowed for a 4–5 score when a distinct material risk
 ### Reviewer roles and how they review
 
 - **A — Requirement correctness:** independently derive acceptance criteria and business invariants, trace the full intended journey and find semantic mistakes or missing scenarios.
-- **B — Implementation consistency:** search progressively (changed module → direct dependencies → relevant shared code → selective history), compare established code and business semantics, and prefer existing reuse or module-local extraction. A shared utility package is appropriate only when stable cross-module technical behavior recurs; shared business rules belong in domain services/policies. **Never abstract merely because code looks similar.**
+- **B — Implementation consistency:** search progressively (changed module → direct dependencies → relevant shared code → selective history), compare existing business semantics and file/module cohesion, coupling, fragmentation and stable names where relevant, and prefer existing reuse or module-local extraction. A shared utility package is appropriate only when stable cross-module technical behavior recurs; shared business rules belong in domain services/policies. **Never abstract merely because code looks similar.**
 - **C — System engineering:** assess applicable performance, security, long-term maintenance, system compatibility and distributed failure/concurrency risks using targeted probes.
 
 With **one** reviewer, cover all three lenses in proportion to risk. With **two**, default to A and combined B+C (or split differently for the dominant risk); parent checks gaps. With **three**, assign A/B/C separately. Role-specific investigation guidance is in `references/review-playbook.md`. No role is a reason to demand refactoring purely for reuse.
@@ -54,6 +54,7 @@ For review evidence, costs and repair history, use the standard-library helper `
 - `references/review-playbook.md` — role-specific investigation methods and optional engineering probes.
 - `references/engineering-quality.md` — evidence-based engineering-quality principles.
 - `references/project-conventions.md` — applicable repository/agent instructions, language and toolchain constraints.
+- `references/code-structure-governance.md` — responsibility-based file splitting/consolidation, directory cohesion, change locality, durable names and safe refactoring checks.
 - `references/data-access-practices.md` — N+1, indexes, transactions, deadlocks, cache consistency.
 - `references/frontend-experience.md` — theme/component reuse, plain-language UX and no leaked conversation notes in UI.
 - `references/security-review-checklist.md` — optional security guidance.
