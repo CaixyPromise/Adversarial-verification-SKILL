@@ -235,6 +235,8 @@ def extract_archive(blob, stage):
                 shutil.copyfileobj(source, out, length=64 * 1024)
             if dest.stat().st_size != member.size:
                 raise ValueError("Truncated archive entry")
+            # Preserve only normal executable bits, not archive-supplied special permissions.
+            dest.chmod(0o755 if (member.mode & 0o111) else 0o644)
     for path in ("SKILL.md", "skill-version.json", "scripts/av.py",
                  "scripts/review_report.py", "templates/review-report.html"):
         if not (stage / path).is_file():

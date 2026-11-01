@@ -86,6 +86,43 @@ class TestAvCLI(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     av.extract_archive(self.archive([(name, b"x", type_)]), Path(temp))
 
+    def test_refuse_update_inside_git_checkout(self):
+        with tempfile.TemporaryDirectory() as temp:
+            installed = Path(temp) / "skill"
+            installed.mkdir()
+            subprocess.run(["git", "init", "-q", str(installed)], check=True)
+            with mock.patch.object(av, "ROOT", installed):
+                with self.assertRaisesRegex(ValueError, "git pull"):
+                    av.update(yes=True)
+
+    def test_update_pinned_archive_and_backup(self):
+        with tempfile.TemporaryDirectory() as temp:
+            installed = Path(temp) / "skill"
+            installed.mkdir()
+            (installed / "SKILL.md").write_text("old", encoding="utf-8")
+            (installed / "skill-version.json").write_text(
+                json.dumps({"repository": av.REPO, "version": "0.2.0"}), encoding="utf-8")
+            required = [
+                ("SKILL.md", b"new", "file"),
+                ("skill-version.json", json.dumps({"repository": av.REPO, "version": "0.4.0"}).encode(), "file"),
+                ("scripts/av.py", b"x", "file"),
+                ("scripts/review_report.py", b"x", "file"),
+                ("templates/review-report.html", b"x", "file"),
+            ]
+            latest_commit = "a" * 40
+            def fake_json(url):
+                return {"sha": latest_commit} if url == av.COMMITS else {"repository": av.REPO, "version": "0.4.0"}
+            with mock.patch.object(av, "ROOT", installed):
+                with mock.patch.object(av, "fetch_json", side_effect=fake_json):
+                    with mock.patch.object(av, "fetch", return_value=self.archive(required)):
+                        with mock.patch.object(av, "cache_remote", return_value={}):
+                            with redirect_stdout(StringIO()):
+                                self.assertEqual(av.update(yes=True), 0)
+            self.assertEqual((installed / "SKILL.md").read_text(), "new")
+            backups = list(installed.parent.glob(".av-backup-*"))
+            self.assertEqual(len(backups), 1)
+            self.assertEqual((backups[0] / "SKILL.md").read_text(), "old")
+
     def test_valid_archive(self):
         with tempfile.TemporaryDirectory() as temp:
             entries = [
