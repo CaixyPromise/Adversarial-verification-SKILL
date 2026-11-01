@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.0 — 2026-11-02
+
+- Introduce `av` CLI that delegates to existing JSON/HTML review report commands without breaking task-level archive reuse.
+- Add cached, bounded, nonblocking GitHub version checks; network errors do not block Review and only verified new versions are suggested.
+- Support explicit `av check-update`, `av version` and opt-in `av update` with pinned SHA archive, safe extraction, backup and refusal to replace Git checkouts.
+- Add CLI unit tests, version manifest and installation guidance. No project code or reports are uploaded.
+
 - Add cross-cutting artifact purity and minimal sufficiency: prevent AI discussion residue in user-facing text and code names, and avoid unnecessary flags/branches/wrappers created solely to demonstrate compliance. Keep genuine compatibility, safety and audit needs.
 
 ## 0.2.0 — 2026-11-01

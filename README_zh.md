@@ -54,20 +54,43 @@ Verifier 必须**先根据原始需求和可信契约独立推导预期行为**�
 
 开始/结束时间由脚本记录，Token 只有拿到可信来源才填写；不把未知当 0。优先使用本地既有的同类报告目录，否则创建专用目录，加入本地 Git `.git/info/exclude`，禁止默认提交归档。报告模块是**按需能力，不阻塞 Review 交付**。
 
+## CLI 命令与更新 Skill
+
+无需第三方依赖，Python 3.9+ 即可使用。安装 Skill 后，在 Skill 目录执行：
+
+```bash
+python3 scripts/av.py install-cli  # 在 ~/.local/bin 安装 av 命令
+av version
+av report start --task-id ISSUE-123 --task "权限包克隆" --risk 5 --agents 2
+av report finding --task-id ISSUE-123 --title "权限校验缺失" --proposal "在服务层校验归属"
+av report finish --task-id ISSUE-123 --assessment CHANGES_NEEDED
+
+av check-update       # 立即检查 GitHub 最新版本
+av update             # 手动确认并更新 Skill
+av update --yes       # 明确允许非交互更新
+```
+
+如果 `~/.local/bin` 不在 `PATH`，可直接使用 `python3 /Skill目录/scripts/av.py`；审查其他工程时，将 `--project /工程路径` 放在 `report` 前。Windows 可直接使用 Python 运行脚本。原 `scripts/review_report.py` 命令继续兼容，已有报告不会被重新创建。
+
+**非阻塞版本检查**：执行报告 CLI 时先读取本地缓存的更新提示，最多每 24 小时后台请求一次 GitHub 的公开版本清单；短命令通常会在**下一次执行**看到提示，不会等待网络。缓存位于 `~/.cache/adversarial-verification/update-check.json`（或 `$XDG_CACHE_HOME`），这是隐藏的用户级缓存，不放在工程仓库。网络不可用不会阻塞审查。可设置 `AV_DISABLE_UPDATE_CHECK=1` 禁用；不会上传代码、报告或 Token 数据。
+
+**更新必须主动执行**：`av update` 会核对 GitHub 的固定提交和版本清单、安全提取归档、先暂存再替换，并保留旧 Skill 备份。不会自动升级，不会改动项目中的本地审查档案；如果 Skill 本身是 Git 工作区，则拒绝覆盖并要求使用 `git pull`。更新后重新启动 Coding Agent 以载入新指令。
+
+**工件与实现清洁度：** 不将已否决的讨论方案写进最终界面文案或文件名，也不为证明遵守否定式需求而增加不必要的技术开关、包装或分支；保留真正需要的兼容、审计与安全信息。
+
 ## 文件结构
 
 - `SKILL.md`：唯一核心执行规则与 Agent 分配策略。
 - `references/review-playbook.md`：A/B/C 角色审查思路与按需使用的技术验证方法。
 - `references/engineering-quality.md`：通用工程质量原则。
 - `references/project-conventions.md`：先理解 AGENTS.md、CLAUDE.md、语言与项目规则。
-**工件与实现清洁度：** 不将与用户讨论但已否决的方案写进最终文案、文件名；不为证明遵守否定式需求而新增无意义的开关、包装或分支。保留真正必要的版本、兼容、审计和安全信息。
-
 - `references/code-structure-governance.md`：文件职责、目录组织、过大或过碎模块、命名清洁度与安全重构依据。
 - `references/data-access-practices.md`：数据库、N+1、索引、事务、死锁、缓存与一致性。
 - `references/frontend-experience.md`：复用既有设计系统与组件、交互简洁、用户可懂的文案；页面不能残留 AI 会话中的已否决方案。
 - `references/security-review-checklist.md`：安全敏感需求可选参考。
 - `agents/openai.yaml`：Agent 展示与默认指令。
-- `scripts/review_report.py`、`templates/review-report.html`：本地静态报告生成脚本与模板。
+- `scripts/av.py`、`skill-version.json`：CLI、异步版本检查缓存与显式更新。
+- `scripts/review_report.py`、`templates/review-report.html`：兼容原命令的静态报告生成脚本与模板。
 - `references/reporting.md`：命令、同任务归档复用、数据来源与 Git 安全说明。
 
 ## Codex 安装

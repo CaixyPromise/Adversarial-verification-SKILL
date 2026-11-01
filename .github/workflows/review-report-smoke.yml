@@ -1,11 +1,22 @@
-name: Review dossier smoke tests
+name: Review CLI and dossier tests
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - "scripts/av.py"
+      - "scripts/review_report.py"
+      - "skill-version.json"
+      - "templates/review-report.html"
+      - "tests/**"
+      - ".github/workflows/review-report-smoke.yml"
   pull_request:
     paths:
+      - "scripts/av.py"
       - "scripts/review_report.py"
+      - "skill-version.json"
       - "templates/review-report.html"
-      - "tests/test_review_report.py"
+      - "tests/**"
       - ".github/workflows/review-report-smoke.yml"
   workflow_dispatch:
 
@@ -17,8 +28,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Python report lifecycle tests
+      - name: Python CLI and report lifecycle tests
         run: python3 -m unittest discover -s tests -v
+      - name: Verify Python module syntax
+        run: python3 -m py_compile scripts/av.py scripts/review_report.py
       - name: Static HTML JavaScript syntax
         run: |
           python3 - <<'PY'

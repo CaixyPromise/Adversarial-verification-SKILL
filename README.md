@@ -48,20 +48,43 @@ One broad review round is the default. Fixes receive targeted re-verification of
 
 For review evidence, costs and repair history, use the standard-library helper `scripts/review_report.py` (see [reporting guide](references/reporting.md)). It generates **one reusable JSON and static interactive HTML pair per task**. Reviewers submit proposals; the implementer records actual fixes and verification; subsequent review rounds update the same dossier. The HTML supports filtering, expand/collapse, per-round history, printing and JSON export without a web server. Timing is measured only between recorded invocations; token figures appear only when supplied by trustworthy telemetry. Reports stay local and are protected with `.git/info/exclude` rather than committed.
 
+## CLI — Review reports and Skill updates
+
+Python 3.9+ standard library only. After installation, run from the Skill directory:
+
+```bash
+python3 scripts/av.py install-cli   # creates a small launcher in ~/.local/bin
+av version
+av report start --task-id ISSUE-123 --task "Permission clone" --risk 5 --agents 2
+av report finding --task-id ISSUE-123 --title "Missing owner validation" --evidence "Service path permits a cross-user write" --proposal "Validate ownership in service"
+av report finish --task-id ISSUE-123 --assessment CHANGES_NEEDED
+
+av check-update       # explicit, immediate GitHub version lookup
+av update             # asks before replacing a non-Git installed Skill
+av update --yes       # explicit non-interactive confirmation
+```
+
+If the launcher directory is not on `PATH`, call `python3 /path/to/skill/scripts/av.py` instead. For a different project, provide `--project /path/to/project` **before** `report`. The older `scripts/review_report.py` interface remains supported. On Windows use Python to run the script directly.
+
+**Nonblocking version discovery:** ordinary report CLI calls show any cached update notice and, at most once every 24 hours, launch a detached, time-limited version metadata check. The result is cached under `~/.cache/adversarial-verification/update-check.json` (or `$XDG_CACHE_HOME`); the first call may only show the notice on the next invocation. GitHub outages never block reporting. Disable this network check with `AV_DISABLE_UPDATE_CHECK=1`. No project code, report contents or telemetry are uploaded.
+
+**Updating is opt-in:** `av update` fetches the official GitHub main commit, checks a pinned version manifest, downloads that exact GitHub archive via HTTPS, rejects unsafe archive paths/links, stages the replacement and keeps the old Skill in a sibling backup folder. It refuses to overwrite Git working trees (use `git pull` there). Existing project review archives are unaffected. Restart your coding agent after updating.
+
+**Artifact purity:** avoid final UI copy, filenames or unnecessary mechanisms that merely narrate rejected AI-user discussion alternatives. Preserve genuine compatibility, security and audit requirements.
+
 ## Files
 
 - `SKILL.md` — authoritative workflow and 0–3 agent allocation.
 - `references/review-playbook.md` — role-specific investigation methods and optional engineering probes.
 - `references/engineering-quality.md` — evidence-based engineering-quality principles.
 - `references/project-conventions.md` — applicable repository/agent instructions, language and toolchain constraints.
-**Artifact purity:** avoid UI copy, file names or unnecessary technical mechanisms that merely narrate rejected AI-user discussion alternatives. Legitimate business, compatibility, audit and safety requirements remain valid.
-
 - `references/code-structure-governance.md` — responsibility-based file splitting/consolidation, directory cohesion, change locality, durable names and safe refactoring checks.
 - `references/data-access-practices.md` — N+1, indexes, transactions, deadlocks, cache consistency.
 - `references/frontend-experience.md` — theme/component reuse, plain-language UX and no leaked conversation notes in UI.
 - `references/security-review-checklist.md` — optional security guidance.
 - `agents/openai.yaml` — skill interface metadata.
-- `scripts/review_report.py` and `templates/review-report.html` — offline task dossier generator and static report template.
+- `scripts/av.py` and `skill-version.json` — CLI, cached GitHub update checks and explicit verified Skill updater.
+- `scripts/review_report.py` and `templates/review-report.html` — backwards-compatible offline dossier generator and static report template.
 - `references/reporting.md` — usage, archive discovery, provenance and Git safety.
 
 ## Install in Codex
