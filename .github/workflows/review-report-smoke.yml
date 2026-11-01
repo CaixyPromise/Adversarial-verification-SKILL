@@ -1,0 +1,32 @@
+name: Review dossier smoke tests
+
+on:
+  pull_request:
+    paths:
+      - "scripts/review_report.py"
+      - "templates/review-report.html"
+      - "tests/test_review_report.py"
+      - ".github/workflows/review-report-smoke.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  report-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Python report lifecycle tests
+        run: python3 -m unittest discover -s tests -v
+      - name: Static HTML JavaScript syntax
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          html = Path("templates/review-report.html").read_text(encoding="utf-8")
+          js = html.split("<script>", 1)[1].split("</script>", 1)[0]
+          Path("/tmp/adversarial-review-report.js").write_text(
+              js.replace("__REPORT_DATA__", "{}"), encoding="utf-8"
+          )
+          PY
+          node --check /tmp/adversarial-review-report.js
