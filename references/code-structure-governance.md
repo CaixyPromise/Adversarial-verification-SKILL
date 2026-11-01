@@ -29,6 +29,10 @@ Organize code around **stable responsibilities, high cohesion, manageable coupli
 | `phase2-cache-handler.ts` if `phase2` is only a task label | A cache responsibility such as `cache-invalidation.ts`, if it matches the contents |
 | `permissions-without-popup.tsx` | The feature/component name, without discussion commentary |
 
+**Avoid conversation-driven overengineering:** Negative requests such as no ID, no modal or no option B normally constrain the final behavior; they do not automatically justify a persistent toggle, duplicate path, wrapper or abstraction that proves the rejected option was avoided. Prefer omission or existing compatible components unless independently needed for real runtime configuration, release, migration or compatibility.
+
+Ask whether the added mechanism has a durable responsibility, and whether removing it preserves intended behavior. Keep necessary API versions, real feature flags and audit/compatibility evidence. Reviewers propose changes; they do not silently expand implementation scope.
+
 A requirement to **hide an ID from users** is not a reason to name a code file "no ID version". Equally, "not using option B" must not become a filename or exported symbol. The codebase should make sense to someone **who never saw the AI conversation**.
 
 **Exceptions:** G0, V2, legacy, experimental, migration, compatibility, rollout or protocol labels may be perfectly valid if they are **real, documented, durable distinctions** necessary for correct operation or coexistence. Verify actual meaning; do not rename based solely on an unusual filename, and do not erase legitimate migration or audit metadata.

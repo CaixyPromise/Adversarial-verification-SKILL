@@ -35,6 +35,10 @@ A user asking **not to show ID** means omit the ID where appropriate, **not** pr
 
 **Review technique:** read modified JSX/TSX/Vue/template/i18n strings and inspect the rendered page (if available). Look for parenthetical "已去除…/不显示…/方案A/B/按要求…/不是旧版…" qualifiers, internal technical jargon and phrases addressed to the assistant. Determine whether the text communicates genuine user value or is merely commentary about design decisions. **Do not blindly blacklist words** such as "无数据", "版本" or important IDs: a real user task, safety notice, required field, version number or explicit comparison may need them.
 
+**Avoid implementing the discussion as a feature:** A request to hide an ID usually means omit the field, not create a new `hideId` toggle or `user-without-id` component. Rejecting a modal does not justify a parallel `nonModal` component framework. Prefer the smallest existing interaction that meets the user-facing requirement; add optional modes or compatibility paths only for an actual stable use case.
+
+**Three tests:** Would the result make sense to a user unaware of the discussion? Does the extra copy or mechanism correspond to a genuine product requirement? Can it be removed without changing requested behavior? Do not mechanically reject legitimate status labels, version identifiers, safety disclosures or explicit comparisons.
+
 **Outside the UI:** avoid echoing rejected **session-only** alternatives into irrelevant metadata, commit or PR text and routine handoff. **Preserve** information legitimately required for security, accuracy, migrations, compatibility, audit, source attribution or authorized review reports. Do not falsify repository history or remove mandatory evidence. This is artifact cleanliness, not censorship.
 
 ## Severity and exceptions

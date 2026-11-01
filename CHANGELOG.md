@@ -1,5 +1,7 @@
 # Changelog
 
+- Add cross-cutting artifact purity and minimal sufficiency: prevent AI discussion residue in user-facing text and code names, and avoid unnecessary flags/branches/wrappers created solely to demonstrate compliance. Keep genuine compatibility, safety and audit needs.
+
 ## 0.2.0 — 2026-11-01
 
 - Add optional code structure and naming governance: evaluate cohesion, coupling, directory fragmentation and change locality; prevent AI conversation/temporary phase labels from leaking into filenames; avoid arbitrary LOC/file-count refactors.

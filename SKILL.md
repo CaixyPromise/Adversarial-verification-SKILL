@@ -92,6 +92,10 @@ Inspect the actual changed behavior and its meaningful blast radius **before** f
 - **C:** relevant DB/cache/transaction, security, performance, distributed failure, resource lifecycle, upgrade compatibility and production maintainability
 - across roles: callers, callees, neighboring regressions, invalid states, boundary inputs, error paths, and **whether tests could detect the actual defect**
 
+**Artifact purity and minimal sufficiency:** Final UI copy, file/symbol names and implementation structures should communicate stable product or engineering meaning, not narrate AI-user discussions or rejected alternatives. Do not create flags, branches, wrappers or abstractions solely to demonstrate compliance with a negative requirement.
+
+Apply three tests: (1) would the artifact make sense without the conversation? (2) is the detail a real, durable product/engineering requirement? (3) could removing it preserve all intended behavior? Preserve legitimate feature toggles, public versions, migrations, compatibility, audit records, security evidence and requested comparisons. Review `references/frontend-experience.md` and `references/code-structure-governance.md` only when relevant; do not turn cosmetic residue into an automatic blocker.
+
 Use the most informative feasible evidence: code-path analysis, focused tests, direct execution, runtime outputs/logs, or relevant existing test suites. A direct run is strongly preferred for executable behavioral changes but not mandatory for documentation/config-only changes or unsafe environments. Do not treat green tests, HTTP 200, or exit status 0 as sufficient evidence of business correctness.
 
 **Do not stop at the first one or two bugs.** Finish each assigned material risk area, combine subagent results, remove duplicates, challenge weak findings and report one coherent set. In particular, **compare implementation consistency against existing patterns before recommending new abstractions or duplicate logic**. The parent reconciles disagreements using requirements and evidence, not majority voting. Aim for sufficient coverage, not an impossible guarantee of finding every bug. State meaningful gaps.

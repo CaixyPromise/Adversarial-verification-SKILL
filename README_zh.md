@@ -60,6 +60,8 @@ Verifier 必须**先根据原始需求和可信契约独立推导预期行为**�
 - `references/review-playbook.md`：A/B/C 角色审查思路与按需使用的技术验证方法。
 - `references/engineering-quality.md`：通用工程质量原则。
 - `references/project-conventions.md`：先理解 AGENTS.md、CLAUDE.md、语言与项目规则。
+**工件与实现清洁度：** 不将与用户讨论但已否决的方案写进最终文案、文件名；不为证明遵守否定式需求而新增无意义的开关、包装或分支。保留真正必要的版本、兼容、审计和安全信息。
+
 - `references/code-structure-governance.md`：文件职责、目录组织、过大或过碎模块、命名清洁度与安全重构依据。
 - `references/data-access-practices.md`：数据库、N+1、索引、事务、死锁、缓存与一致性。
 - `references/frontend-experience.md`：复用既有设计系统与组件、交互简洁、用户可懂的文案；页面不能残留 AI 会话中的已否决方案。

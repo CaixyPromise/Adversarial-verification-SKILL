@@ -54,6 +54,8 @@ For review evidence, costs and repair history, use the standard-library helper `
 - `references/review-playbook.md` — role-specific investigation methods and optional engineering probes.
 - `references/engineering-quality.md` — evidence-based engineering-quality principles.
 - `references/project-conventions.md` — applicable repository/agent instructions, language and toolchain constraints.
+**Artifact purity:** avoid UI copy, file names or unnecessary technical mechanisms that merely narrate rejected AI-user discussion alternatives. Legitimate business, compatibility, audit and safety requirements remain valid.
+
 - `references/code-structure-governance.md` — responsibility-based file splitting/consolidation, directory cohesion, change locality, durable names and safe refactoring checks.
 - `references/data-access-practices.md` — N+1, indexes, transactions, deadlocks, cache consistency.
 - `references/frontend-experience.md` — theme/component reuse, plain-language UX and no leaked conversation notes in UI.

@@ -15,6 +15,8 @@ For a quality concern, the reviewer should be able to state:
 3. **Consequence:** What breaks for users, operators or future maintainers, and under which conditions?
 4. **Evidence and response:** What observation, comparison, test or concrete code reasoning supports the claim? What is the **smallest sound correction**?
 
+**Minimal sufficiency applies to negative requirements:** Do not introduce optional modes, flags, wrappers, extra configuration or abstractions solely to demonstrate that a rejected proposal was avoided. Prefer a simpler correct implementation unless a stable product, compatibility, safety or audit requirement justifies the additional mechanism.
+
 No demonstrated material impact => **non-blocking improvement**, question or explicit uncertainty; never invent a defect merely to fill a checklist. A confirmed critical security, authorization or integrity violation remains blocking even if old or outside the immediate diff; attribute it correctly and escalate separately when appropriate.
 
 ## Review lenses and practical standards
