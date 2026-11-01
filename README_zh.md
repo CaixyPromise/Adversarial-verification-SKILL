@@ -48,12 +48,20 @@ Verifier 必须**先根据原始需求和可信契约独立推导预期行为**�
 
 默认只做**一轮覆盖式 Review**，修复后**定向复核**。同一个阻塞问题两次修复复核仍失败时，停止自动循环并报告原因，不能为了输出 READY 继续盲改。READY 也不意味着代码绝对无 Bug 或得到生产发布授权。
 
+## 可选的本地审查报告
+
+需要审查归档或成本统计时，使用 `scripts/review_report.py`（详见 [报告使用说明](references/reporting.md)）。**同一个需求只有一对 JSON/HTML 报告，多轮 Review 复用并累积记录**。Reviewer 记录问题证据及修复 Proposal；主 Agent 在实际修改后填写 Fix 和复核结果。纯静态 HTML 支持搜索、严重程度/状态/归因筛选、展开、轮次历史、打印及 JSON 导出，不启动服务。
+
+开始/结束时间由脚本记录，Token 只有拿到可信来源才填写；不把未知当 0。优先使用本地既有的同类报告目录，否则创建专用目录，加入本地 Git `.git/info/exclude`，禁止默认提交归档。报告模块是**按需能力，不阻塞 Review 交付**。
+
 ## 文件结构
 
 - `SKILL.md`：唯一核心执行规则与 Agent 分配策略。
 - `references/review-playbook.md`：A/B/C 角色审查思路与按需使用的技术验证方法。
 - `references/security-review-checklist.md`：安全敏感需求可选参考。
 - `agents/openai.yaml`：Agent 展示与默认指令。
+- `scripts/review_report.py`、`templates/review-report.html`：本地静态报告生成脚本与模板。
+- `references/reporting.md`：命令、同任务归档复用、数据来源与 Git 安全说明。
 
 ## Codex 安装
 

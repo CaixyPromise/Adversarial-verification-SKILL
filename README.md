@@ -44,12 +44,18 @@ These are **delivery assessments**, not mathematical claims of correctness or pr
 
 One broad review round is the default. Fixes receive targeted re-verification of the issue and affected paths. After two unsuccessful repair cycles for the same blocker, stop automatic looping and escalate with evidence.
 
+## Optional local review dossier
+
+For review evidence, costs and repair history, use the standard-library helper `scripts/review_report.py` (see [reporting guide](references/reporting.md)). It generates **one reusable JSON and static interactive HTML pair per task**. Reviewers submit proposals; the implementer records actual fixes and verification; subsequent review rounds update the same dossier. The HTML supports filtering, expand/collapse, per-round history, printing and JSON export without a web server. Timing is measured only between recorded invocations; token figures appear only when supplied by trustworthy telemetry. Reports stay local and are protected with `.git/info/exclude` rather than committed.
+
 ## Files
 
 - `SKILL.md` — authoritative workflow and 0–3 agent allocation.
 - `references/review-playbook.md` — role-specific investigation methods and optional engineering probes.
 - `references/security-review-checklist.md` — optional security guidance.
 - `agents/openai.yaml` — skill interface metadata.
+- `scripts/review_report.py` and `templates/review-report.html` — offline task dossier generator and static report template.
+- `references/reporting.md` — usage, archive discovery, provenance and Git safety.
 
 ## Install in Codex
 

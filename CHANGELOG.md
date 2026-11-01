@@ -2,6 +2,9 @@
 
 ## 0.2.0 — 2026-11-01
 
+- Add an optional offline review dossier: one reusable JSON + interactive static HTML per task across multiple rounds, with evidence, proposals, applied fixes, re-verification, timestamp provenance and optional measured tokens.
+- Protect archives from Git tracking through local info/exclude, reuse existing skill archive directories, and provide a dependency-free Python generator.
+
 - Make requirements, business flows and invariants the source of review truth.
 - Define complementary reviewer roles: A requirement correctness, B current/historical implementation consistency with pragmatic reuse, C system-level security/performance/maintenance/distributed risks.
 - Add role-specific investigation methods and coverage merging for 0/1/2/3 verifier allocations.

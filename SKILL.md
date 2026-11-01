@@ -128,6 +128,10 @@ Use exactly one delivery assessment:
 
 Finish concisely with: **independently established requirement/flow, risk score and role-based verifier allocation, A/B/C coverage as applicable, findings with evidence and change attribution, residual risks, final assessment**. No artificial PASS quotas or repeated full-review gates.
 
+### Optional local review dossier
+
+When the user requests an archive or review telemetry, use `scripts/review_report.py` and `references/reporting.md`. **One requirement must reuse one local JSON/HTML dossier across review rounds**, using a stable task ID. Reviewers record evidence and proposed repairs; the parent records actual fixes, re-verification, and completion. The script creates a static, searchable HTML report from compact structured records (no web server or dependencies). Only include start/end timestamps measured by script invocations and **real token usage from a known source**; leave missing usage unknown. Reports are local, excluded from Git tracking, and must not become mandatory overhead or a review gate. If the reporting helper is unavailable, report the limitation without blocking code delivery.
+
 ## Safety boundaries
 
 Verifier subagents are read-only with respect to repository implementation files: no edits, dependency installation or Git write operations. Scratch probes may be placed under temporary directories. Use controlled environments; never run destructive, externally billable, production-data-modifying or otherwise irreversible probes without explicit authorization. If safe direct execution is impossible, use static evidence and disclose the gap.
