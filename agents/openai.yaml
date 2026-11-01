@@ -1,4 +1,4 @@
 interface:
   display_name: "Adversarial Verification"
-  short_description: "Independent verifier for non-trivial code changes."
-  default_prompt: "Independently verify this implementation, try to break it, and return PASS/FAIL/PARTIAL with command evidence."
+  short_description: "Requirement-first, risk-adaptive code review (0–3 verifier agents)."
+  default_prompt: "Review the implementation against the original user requirements and business invariants. First assess complexity, impact, and uncertainty (0–6), then allocate zero to three independent verifier subagents with distinct scopes. Perform one coverage-first review, report evidence-backed blockers separately from improvements and unknowns, and stop after targeted re-verification rather than chasing PASS."

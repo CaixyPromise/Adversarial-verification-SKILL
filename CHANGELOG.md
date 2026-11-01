@@ -1,21 +1,15 @@
 # Changelog
 
-All notable changes to this skill will be documented in this file.
+## 0.2.0 — 2026-11-01
 
-The format is intentionally minimal.
+- Make requirements, business flows and invariants the source of review truth.
+- Add 0–6 risk scoring and adaptive **0–3 verifier subagent** allocation (three maximum, never a quota).
+- Replace indefinite FAIL/review loops with one coverage-first round, targeted re-verification and explicit stopping conditions.
+- Distinguish evidence-backed blockers, improvements and unverified risks; introduce READY / CHANGES_NEEDED / NEEDS_DECISION / PARTIAL delivery assessments.
+- Consolidate duplicated verifier templates, playbooks and parent repair policies.
+- Correct root-directory installation instructions and remove machine-specific paths.
+- Breaking change: integrations parsing legacy PASS/FAIL/PARTIAL verdict lines must migrate.
 
 ## 0.1.0
 
-Initial open-source packaging of `adversarial-verification`.
-
-Included:
-
-- standalone `SKILL.md`
-- agent config scaffold
-- adversarial verifier prompt templates
-- parent-agent to verifier-subagent workflow
-- security review checklist
-- root-cause fix policy
-- main-thread discipline policy
-- English and Chinese README files
-- MIT license
+Initial open-source packaging of `adversarial-verification` with independent verifier prompts, parent/repair policies, domain checklists and bilingual documentation.

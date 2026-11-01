@@ -1,198 +1,70 @@
-# adversarial-verification
+# Adversarial Verification
 
-一个面向 Agentic Coding 工作流的“对抗式验证”技能。
+面向 AI Coding Agent 的**需求驱动、风险自适应**代码审查 Skill。
 
-这个SKILL受 Claude Code 的 adversarial verification / verifier agent 机制启发，并在这里被重新打包成一个可独立复用的 skill，供其他 coding agent 使用。
+核心目标不是不断得到 PASS，也不是尽可能找出更多问题，而是**基于真实需求和业务不变量，找出对交付有实际影响且有证据的缺陷**。简单改动不强制启动独立 Agent；复杂改动根据风险最多分配 3 个独立 Verifier。
 
-English version: [`README.md`](./README.md)
+English: [README.md](./README.md)
 
-这个 skill 的目标，是强制把以下三类角色清晰拆开：
+## 五步工作流
 
-- 负责实现的实现代理
-- 负责找问题的独立 verifier 子代理
-- 在 verifier 失败后必须按根因修复、不能乱补丁的父代理 / 主线程
+1. **理解需求**：明确用户想得到的行为、业务主链路、关键不变量和不确定项。
+2. **风险评估**：复杂度、业务影响、需求不确定性各打 0–2 分，总分 0–6。
+3. **覆盖审查**：一轮覆盖相关的需求、主链路、上下游回归和技术风险，不找到一两个问题就提前结束。
+4. **根因修复**：仅将有证据的实质缺陷视为阻塞；关键业务规则无法确定时请人类决策。
+5. **定向复核并结束**：验证修复点与关联回归，不为追求 PASS 无限重复完整 Review。
 
-核心思想很简单：
+## 动态分配 0–3 个审查 Agent
 
-- verifier 不是来确认“看起来大概没问题”的
-- verifier 是来故意尝试把改动搞坏、找出薄弱点的
-- 主线程不能为了变绿而迎合样例、歪曲业务、放宽约束或乱打补丁
+| 评分 | 默认独立 Agent 数 | 方式 |
+| --- | --- | --- |
+| 0–1 | 0 | 改标题、文案等：直接检查结果 |
+| 2–3 | 1 | 单功能及相关回归检查 |
+| 4–5 | 2 | 业务链路与一个独立技术风险 |
+| 6 | 3 | 业务、关键技术边界、集成回归分别审查 |
 
-## 这个 skill 适合解决什么问题
+**最多 3 个，不是必须用满 3 个。** 在 4–5 分时，如存在第三类独立且重要的风险，也可以派发第 3 个 Agent。对于鉴权、资金、隐私、数据完整性和不可逆操作，即使改动只有几行，也必须提高审查强度。无法明确的关键业务规则，不允许 AI 擅自猜测并据此改代码。
 
-当你希望 AI Coding 工作流在“非 trivial 改动”后，增加一道更强的软件质量门时，就适合用这个 skill。
+3 个 Agent 的典型分工：
+- A：用户需求、业务流程和关键不变量。
+- B：权限、安全、数据完整性、并发或状态。
+- C：上下游集成、兼容性、回归和运行风险。
 
-尤其适合这些场景：
+分工随需求变化；**禁止多个 Agent 无区别地重复审查同一份 Diff**。无子 Agent 可用时，允许主 Agent 自行按同样原则检查，但需说明不具备独立性。
 
-- 后端与 API 改动
-- 需要运行时交互验证的前端流程
-- 数据库与迁移改动
-- Shell、CLI、脚本、自动化流程
-- 安全敏感路径
-- 性能或规模敏感改动
-- 数据管道与异步任务
-- 移动端或桌面客户端行为
-- 基础设施、部署、运维类改动
-- LLM / Agent 工作流改动
+## 结果与停止条件
 
-## 包含哪些内容
+- `READY`：必要的检查覆盖充分，已审查范围内没有已知阻塞问题。
+- `CHANGES_NEEDED`：仍有证据充分的阻塞性缺陷。
+- `NEEDS_DECISION`：核心业务判断需要人类决定。
+- `PARTIAL`：部分必要验证无法完成，说明原因和残余风险。
 
-- `SKILL.md`：技能主入口
-- `agents/openai.yaml`：agent 配置骨架
-- `references/playbook.md`：对抗式探测打法
-- `references/domain-checklists.md`：性能、数据库、内存、安全、业务正确性、反作弊等评审域
-- `references/prompt-templates.md`：按改动类型拆分的 verifier prompt 模板
-- `references/parent-workflow.md`：parent agent -> verifier subagent 工作流
-- `references/security-review-checklist.md`：结构化安全评审 checklist
-- `references/root-cause-fix-policy.md`：主线程在 verifier `FAIL` 后如何做根因修复
-- `references/main-thread-discipline.md`：主线程禁止样例迎合、浅层补丁、越权自作主张的约束
+每条阻塞问题要有：违反的需求或约束、触发条件、代码或运行证据、实际影响和修复方向。改善建议、设计偏好和待验证假设不能直接当作阻塞缺陷。
 
-## 在 Codex 中安装
+默认只做**一轮覆盖式 Review**，修复后**定向复核**。同一个阻塞问题两次修复复核仍失败时，停止自动循环并报告原因，不能为了输出 READY 继续盲改。READY 也不意味着代码绝对无 Bug 或得到生产发布授权。
 
-这个 skill 的目录结构已经按可独立安装到 Codex 本地 skill 目录的方式整理好了，默认目标目录为：
+## 文件结构
 
-```text
-~/.codex/skills/adversarial-verification
-```
+- `SKILL.md`：唯一核心执行规则与 Agent 分配策略。
+- `references/review-playbook.md`：按需读取的审查和对抗探测方法。
+- `references/security-review-checklist.md`：安全敏感需求可选参考。
+- `agents/openai.yaml`：Agent 展示与默认指令。
 
-安装后需要重启 Codex，才能加载新的 skill。
+## Codex 安装
 
-### 方案一：通过 GitHub 直接 `curl` 安装
+仓库的**根目录**就是 Skill 目录，`SKILL.md` 直接位于根目录。
 
 ```bash
-export CODEX_HOME="${CODEX_HOME:-$HOME/.codex}"
-mkdir -p "$CODEX_HOME/skills"
-
-curl -L "https://github.com/CaixyPromise/Adversarial-verification-SKILL/archive/refs/heads/main.tar.gz" \
-  | tar -xz --strip-components=2 -C "$CODEX_HOME/skills" \
-      "Adversarial-verification-SKILL-main/skills/adversarial-verification"
+export CODEX_HOME="$HOME/.codex" # 如已有自定义路径请相应修改
+mkdir -p "$CODEX_HOME/skills/adversarial-verification"
+curl -fsSL "https://github.com/CaixyPromise/Adversarial-verification-SKILL/archive/refs/heads/main.tar.gz" \
+  | tar -xz --strip-components=1 -C "$CODEX_HOME/skills/adversarial-verification"
 ```
 
-### 方案二：通过 Codex 的 `skill-installer` 安装
+安装或更新后重新启动 Codex；开发时也可以直接将仓库 clone 到同一路径。
 
-本地已经有 Codex 自带的 `skill-installer`，也可以按它的 GitHub repo/path 安装方式来装：
+## 从 v0.1 升级
 
-```bash
-export CODEX_HOME="${CODEX_HOME:-$HOME/.codex}"
+原有 `PASS/FAIL/PARTIAL` 终态和 11 套专项 Prompt 已被简洁的需求驱动流程替代。如果有外部自动化依赖旧 verdict 字符串，需要同步调整解析逻辑。独立只读 Verifier、实际证据、根因修复和不允许擅自更改业务语义的原则仍然保留。
 
-$CODEX_HOME/skills/.system/skill-installer/scripts/install-skill-from-github.py \
-  --repo CaixyPromise/Adversarial-verification-SKILL \
-  --path skills/adversarial-verification
-```
-
-如果希望安装方式尽量轻量、不要依赖额外 helper script，那么上面的 `curl` 方案更直接。
-
-## 设计原则
-
-这个 skill 明确内置了几条强约束：
-
-- 验证必须独立于实现
-- 测试通过只是上下文，不是最终证明
-- 只测 happy path 不够
-- verifier 必须主动尝试搞坏系统
-- 主线程必须修根因，不能修表象
-- 行为语义有歧义时，必须升级给用户确认，而不是自己猜
-
-## verifier 的 verdict 契约
-
-verifier 最终必须只给出以下三种结论之一：
-
-- `VERDICT: PASS`
-- `VERDICT: FAIL`
-- `VERDICT: PARTIAL`
-
-而且 verifier 必须给“证据”，不是给“感觉”：
-
-- 跑了什么命令
-- 实际观察到了什么输出
-- 预期和实际有什么差异
-- 每个检查项的明确结果
-
-## 已支持的专项 verifier prompt
-
-目前已经覆盖：
-
-- general
-- frontend
-- backend/API
-- migration/database
-- CLI/script
-- security/penetration
-- performance/scalability
-- data-pipeline/async-job
-- mobile/desktop-client
-- infra/deployment/ops
-- LLM/agent-workflow
-
-## 使用示例
-
-### 1. 由父代理拉起 verifier 子代理
-
-推荐在实现完成后、且工作属于 non-trivial 的情况下使用。
-
-示例 parent -> verifier prompt：
-
-```text
-Use the adversarial-verification skill in this directory to independently verify this implementation.
-
-Original user request:
-[paste request]
-
-Changed files:
-[paste changed files]
-
-Implementation summary:
-[paste summary]
-
-Success criteria / plan path:
-[optional]
-
-Suggested commands:
-[optional]
-
-Requirements:
-- Treat this as non-trivial implementation verification.
-- Do not modify project files.
-- Run the feature directly, not just tests.
-- Run at least one adversarial probe.
-- Choose the specialized verifier prompt that best matches the change type.
-- If the implementation appears to pass by distorting business behavior, gaming fixtures, or weakening the contract, call that out explicitly.
-- End with exactly one of: VERDICT: PASS / VERDICT: FAIL / VERDICT: PARTIAL.
-```
-
-### 2. verifier 的基本工作流
-
-verifier 应该做的事情：
-
-1. 读取项目说明和运行命令
-2. 在适用时运行 build / test / lint / typecheck
-3. 直接运行被改动的功能
-4. 至少执行一个对抗式探测
-5. 检查真实输出、运行时行为和副作用
-6. 给出带证据的 verdict
-
-### 3. 主线程在 `FAIL` 之后应该怎么做
-
-parent / main thread 应该：
-
-1. 把 `FAIL` 当成交付阻塞，而不是可协商意见
-2. 先读 `references/main-thread-discipline.md`
-3. 再读 `references/root-cause-fix-policy.md`
-4. 直接复现失败
-5. 原因不清楚时先加临时日志或诊断
-6. 以业务/功能根因为目标来修
-7. 行为存在歧义时先问用户
-8. 修完后重新做验证
-
-## 安全类评审怎么用
-
-对于安全敏感改动，推荐这样搭配：
-
-- 使用 `security/penetration` 专项 verifier prompt
-- 配合 `references/security-review-checklist.md`
-- 先报告已确认的最高风险问题
-- 如果确认存在 `Critical` 或 `High` 问题，不允许给出 `PASS`
-
-## 许可证
-
-MIT，详见 `LICENSE`。
+MIT License.

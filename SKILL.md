@@ -1,159 +1,99 @@
 ---
 name: adversarial-verification
-description: Independent adversarial verification for non-trivial implementation work. Use when Codex should launch a separate subagent to validate code changes before reporting completion, especially after 3+ file edits, backend/API changes, infrastructure changes, migrations, risky frontend work, or any implementation where self-review is not enough. Triggers on requests to independently verify, adversarially test, second-opinion review, try to break the implementation, or gate completion with PASS/FAIL/PARTIAL evidence.
+description: Requirement-driven, risk-adaptive verification of coding changes. Use for independent code review, adversarial checks, regression analysis, business-flow validation, and evidence-based delivery assessment. Allocate zero to three verifier subagents based on complexity, impact, and uncertainty; do not require a verifier for trivial changes.
 ---
 
 # Adversarial Verification
 
-Launch a separate verifier subagent for non-trivial implementation work. The verifier's job is not to confirm the code looks correct. Its job is to try to break the change, gather execution evidence, and issue a verdict.
+## Purpose
 
-## Quick start
+Protect **intended business behavior** with proportionate, evidence-based review. The goal is **not** to maximize findings, repeatedly obtain PASS, or prove code defect-free. Review what the user actually requested and what the change can break.
 
-When subagents are available, use a fresh subagent for verification after implementation is complete.
+The implementing (parent) agent owns delivery and decisions; independent verifier subagents inspect and test but do not edit implementation files. A review is a decision aid, not release authorization.
 
-Pass the verifier only the minimum task-local context it needs:
+## 1. Understand before judging
 
-- original user request
-- changed files
-- implementation summary
-- success criteria or plan path if one exists
-- relevant run/build/test commands if they are non-obvious
+Derive a short review brief from the original request, acceptance criteria, project conventions, relevant code/tests, and the actual diff:
 
-Do not pass your own conclusion. Do not tell the verifier that the code is probably correct. Do not preload expected outcomes unless the task requires exact contract checking.
+- **Intent:** What observable outcome should the user get?
+- **Invariants:** Which business rules, authorization boundaries, data properties, or compatibility contracts must remain true?
+- **Flow:** Which entry points, decisions, state transitions, side effects, and upstream/downstream paths are affected?
+- **Unknowns:** Which assumptions could change whether the implementation is correct?
 
-## Hard rules for the verifier
+Do not treat existing tests, the implementation summary, or the current code behavior as the specification. Independently verify important assumptions against sources.
 
-The verifier must:
+Resolve ordinary uncertainty from available evidence. **Ask the human before deciding** only when a material product/business rule cannot be established and different interpretations change the implementation or review outcome. State the exact decision and plausible alternatives. Do not invent a rule or endlessly interrogate the user.
 
-- not modify project files
-- not install dependencies
-- not perform git write operations
-- treat passing tests as context, not proof
-- run the feature directly instead of only reading code
-- include exact commands and observed outputs in its report
-- check business correctness, not only mechanical correctness
-- call out fixes that merely game tests instead of solving the underlying problem
-- end with exactly one of: `VERDICT: PASS`, `VERDICT: FAIL`, `VERDICT: PARTIAL`
+## 2. Assess risk and allocate agents
 
-Temporary scripts are allowed only under `/tmp` or `$TMPDIR` when needed for multi-step probes.
+Score each axis **0–2**, based on the change and its context:
 
-## Parent agent workflow
+| Axis | 0 | 1 | 2 |
+| --- | --- | --- | --- |
+| Complexity | Cosmetic / isolated | One module / modest state | Cross-module, concurrent, distributed or complex state |
+| Impact | Negligible | Local feature or user-facing regression | Core flow, auth/security, data integrity, financial or hard-to-reverse impact |
+| Uncertainty | Clear behavior | Minor assumptions | Materially ambiguous requirement or contract |
 
-1. Finish the implementation.
-2. Decide whether the work is non-trivial.
-3. If non-trivial, launch a fresh verifier subagent.
-4. Wait for the verifier's report.
-5. If `FAIL`, fix the issue and re-run the verifier.
-6. If `PASS`, optionally spot-check 1-2 commands from the verifier report before reporting completion.
-7. If `PARTIAL`, report exactly what was verified and what could not be verified.
+Total **0–6**; this is a heuristic, not a proof of risk.
 
-## What counts as non-trivial
+| Score | Default independent verifier subagents | Review |
+| --- | --- | --- |
+| 0–1 | **0** | Implementer checks the direct result; skip independent review |
+| 2–3 | **1** | Focused review of requirements and likely regressions |
+| 4–5 | **2** | Separate business/flow and highest-risk technical concerns |
+| 6 | **3** | Independent, complementary high-risk perspectives |
 
-Treat the work as non-trivial when any of these apply:
+**Maximum: 3 verifier subagents per review round.** Counts refer to verifier subagents; the parent agent is not an extra verifier. Use fewer when scopes cannot be meaningfully separated, resources are unavailable, or the change does not justify them. At score 4–5, a third verifier is allowed only for a clearly distinct material risk. Critical security, authorization, financial, privacy, or irreversible-data changes require elevated scrutiny even if few lines change; typically at least two complementary reviews when subagents are available.
 
-- 3 or more file edits
-- backend or API behavior changed
-- infrastructure or config behavior changed
-- database or migration work changed
-- frontend behavior changed in a way that needs runtime interaction
-- the change can regress neighboring behavior even if the happy path passes
+Example split for three: **(1) requirements/business flow, (2) security/state/concurrency/data integrity, (3) regression/integration/operational behavior**. Adapt to the change; never launch duplicate reviewers to read the same diff with the same question. Every verifier receives the original request, relevant business rules, changed code, and its distinct scope, without the implementer's confidence or desired verdict.
 
-## Verifier checklist
+If subagents are not available, do a scoped self-review and disclose the lack of independent verification.
 
-The verifier should perform, at minimum:
+## 3. Conduct one coverage-first review
 
-1. Build / test / lint / type-check if applicable.
-2. Run the changed functionality directly.
-3. Run at least one adversarial probe.
-4. Check observed output, not just exit status or HTTP status.
-5. Issue a PASS / FAIL / PARTIAL verdict with evidence.
-6. Expand into non-functional review domains when relevant: performance, database/query design, memory/resource lifecycle, security, and business correctness.
+Inspect the actual changed behavior and its meaningful blast radius **before** finalizing findings. Start with requirement and flow correctness; then selectively check:
 
-For adversarial probes and change-type-specific tactics, read `references/playbook.md`. For broader review domains and anti-cheating rules, read `references/domain-checklists.md`. For security-sensitive work where the verifier needs a structured reporting frame, read `references/security-review-checklist.md`. For parent-agent response to verifier FAIL and disciplined repair behavior, read `references/root-cause-fix-policy.md` and `references/main-thread-discipline.md`.
+- missing or distorted behavior; violated invariants and acceptance criteria
+- callers, callees, compatibility, neighboring flows and regressions
+- boundary inputs, errors, repeated requests, invalid states and recovery
+- applicable security, data integrity, concurrency, performance, resource lifecycle and operability risks
 
-## Mandatory parent-agent reading
+Use the most informative feasible evidence: code-path analysis, focused tests, direct execution, runtime outputs/logs, or relevant existing test suites. A direct run is strongly preferred for executable behavioral changes but not mandatory for documentation/config-only changes or unsafe environments. Do not treat green tests, HTTP 200, or exit status 0 as sufficient evidence of business correctness.
 
-The parent/main thread must read and understand `references/main-thread-discipline.md` before making post-verification repairs or debug-driven behavior changes.
+**Do not stop at the first one or two bugs.** Finish the applicable risk areas, combine subagent results, remove duplicates, challenge weak findings, and present one coherent set. Aim for sufficient coverage, not an impossible guarantee of finding every bug. State meaningful gaps.
 
-Treat this as mandatory, not optional guidance, when any of these apply:
+Read `references/review-playbook.md` only for relevant probing tactics. For security-sensitive changes, also use `references/security-review-checklist.md`.
 
-- the verifier returned `FAIL`
-- the parent is about to change behavior after a failing test or failing adversarial probe
-- the cause is not yet clearly understood
-- the possible fix changes externally visible behavior, validation, or policy
+## 4. Findings and severity
 
-If the parent has not read `references/main-thread-discipline.md`, it should stop and read it before continuing.
+Report a blocking defect only with:
 
-## Recommended verifier prompt template
+- the violated requirement, invariant or justified safety property
+- trigger/preconditions and a concrete code path or reproduced observation
+- expected versus actual behavior and practical impact
+- minimal recommended repair direction
 
-Use this as the subagent prompt:
+For executed checks, give commands and observed results. For code-only analysis, give specific locations and reasoning, **not fabricated execution evidence**.
 
-```text
-You are an independent adversarial verifier.
+Group results as **Blocking defects**, **Non-blocking improvements**, and **Unverified risks/assumptions**. Style preferences, speculative vulnerabilities, or unproven hypotheticals are not blockers. Confirmed critical/high security issues and material business/integrity failures are blockers. State uncertainty instead of inventing certainty.
 
-Your job is not to confirm the implementation probably works. Your job is to try to break it, find missing edge cases, and produce an evidence-based verdict.
+## 5. Repair, reverify, and stop
 
-You must not modify project files, install dependencies, or run git write operations. Temporary scripts are allowed only in /tmp or $TMPDIR.
+The parent validates findings, fixes confirmed defects at their **business/engineering root cause**, and does not game fixtures, weaken contracts, swallow errors, or silently alter product policy.
 
-Inputs:
-- Original user request: [paste]
-- Changed files: [paste]
-- Implementation summary: [paste]
-- Success criteria / plan path: [optional]
-- Suggested commands: [optional]
+Run **one broad review round** with applicable independent scopes. After changes, **targeted re-verification** must cover each repaired issue and affected regression paths; do not restart the entire review by default. Re-scope only if the repair materially expands the change or reveals a new independent high-risk area.
 
-Workflow:
-1. Read project instructions and run commands.
-2. Run build/test/lint/typecheck if applicable.
-3. Execute the changed behavior directly.
-4. Run at least one adversarial probe.
-5. Report only what you actually ran.
+**Stop** when sufficient applicable coverage is complete and no known blockers remain; when a human decision or environment prevents necessary verification; or when the same blocker has survived **two unsuccessful repair-and-reverify cycles**. In the latter cases, report the blocker, evidence, attempts and what would unblock it. Never keep looping merely to obtain a success label. An unresolved blocker must not be described as ready.
 
-Every check must include:
-- Check
-- Command run
-- Output observed
-- Expected vs Actual
-- Result: PASS or FAIL
+Use exactly one delivery assessment:
 
-End with exactly one of:
-VERDICT: PASS
-VERDICT: FAIL
-VERDICT: PARTIAL
-```
+- `READY` — required evidence is sufficient; no known blockers within reviewed scope (not proof of bug-free code).
+- `CHANGES_NEEDED` — confirmed blocking defects remain.
+- `NEEDS_DECISION` — a material business/product decision blocks a sound conclusion.
+- `PARTIAL` — necessary verification is unavailable or incomplete; describe what is and is not supported.
 
-## Specialized verifier templates
+Finish concisely with: **requirement/flow understood, risk score and verifier allocation, inspected scope, findings with evidence, residual risks, final assessment**. No artificial PASS quotas or repeated full-review gates.
 
-Keep the general verifier prompt as the default. When the change is predominantly UI/browser-facing, use the frontend-specific template. When the change is predominantly server or API behavior, use the backend/API-specific template. When the change is primarily persistence-layer work, use the migration/database-specific template. When the change is primarily a terminal tool or script surface, use the CLI/script-specific template. When the change is security-sensitive, use the security/penetration-specific template. When the change is performance- or scale-sensitive, use the performance/scalability-specific template. When the change is primarily queue, worker, scheduler, webhook-processing, or asynchronous pipeline behavior, use the data-pipeline/async-job-specific template. When the change is primarily a mobile or desktop client surface, use the mobile/desktop-client-specific template. When the change is primarily infrastructure, deployment, runtime operations, CI/CD, containerization, rollout, or incident-prone operational behavior, use the infra/deployment/ops-specific template. When the change is primarily prompt orchestration, tool use, memory/context handling, agent coordination, evaluation loops, or other LLM-agent runtime behavior, use the LLM/agent-workflow-specific template.
+## Safety boundaries
 
-Selection rule:
-
-- frontend-heavy changes: use the frontend-specific template
-- backend/API-heavy changes: use the backend/API-specific template
-- migration/database-heavy changes: use the migration/database-specific template
-- CLI/script-heavy changes: use the CLI/script-specific template
-- security-sensitive changes: use the security/penetration-specific template
-- performance/scalability-sensitive changes: use the performance/scalability-specific template
-- data-pipeline/async-job-heavy changes: use the data-pipeline/async-job-specific template
-- mobile/desktop-client-heavy changes: use the mobile/desktop-client-specific template
-- infra/deployment/ops-heavy changes: use the infra/deployment/ops-specific template
-- LLM/agent-workflow-heavy changes: use the LLM/agent-workflow-specific template
-- mixed full-stack changes: start from the general template and add only the relevant specialized checks
-
-## Parent agent workflow template
-
-Use `references/parent-workflow.md` when you want the parent agent and verifier subagent to work as a full two-stage quality gate rather than a loose review step.
-
-## Using this skill without subagents
-
-If subagents are unavailable, you may follow the same workflow yourself, but explicitly state that this is not a truly independent verification pass.
-
-## References
-
-- Read `references/playbook.md` for adversarial probe patterns.
-- Read `references/domain-checklists.md` for performance, database, code quality, memory, security, and business-correctness review domains.
-- Read `references/prompt-templates.md` for the general verifier prompt, frontend-specific verifier prompt, backend/API-specific verifier prompt, migration/database-specific verifier prompt, CLI/script-specific verifier prompt, security/penetration-specific verifier prompt, performance/scalability-specific verifier prompt, data-pipeline/async-job-specific verifier prompt, mobile/desktop-client-specific verifier prompt, infra/deployment/ops-specific verifier prompt, and LLM/agent-workflow-specific verifier prompt.
-- Read `references/parent-workflow.md` for the full parent-agent -> verifier-subagent workflow template.
-- Read `references/security-review-checklist.md` for a structured security review output format the verifier can apply directly.
-- Read `references/root-cause-fix-policy.md` for how the parent agent should respond to verifier FAIL.
-- Read `references/main-thread-discipline.md` for the main-thread policy against fixture-gaming, shallow patching, and user-approval bypass. This is mandatory reading for the parent/main thread before post-FAIL repair work.
+Verifier subagents are read-only with respect to repository implementation files: no edits, dependency installation or Git write operations. Scratch probes may be placed under temporary directories. Use controlled environments; never run destructive, externally billable, production-data-modifying or otherwise irreversible probes without explicit authorization. If safe direct execution is impossible, use static evidence and disclose the gap.
