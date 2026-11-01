@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Adversarial Review · 审查报告</title>
+  <style>
+    :root{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#202c3e;background:#f5f7fa;font-synthesis:none}
+    *{box-sizing:border-box}body{margin:0}button,input,select{font:inherit}a{color:inherit}
+    .shell{max-width:1140px;margin:auto;padding:40px 26px 88px}
+    .eyebrow{font-size:12px;color:#63738b;letter-spacing:.12em;font-weight:750;text-transform:uppercase}
+    .heading{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;margin:10px 0 24px}
+    h1{font-size:clamp(25px,4vw,36px);letter-spacing:-.045em;line-height:1.2;margin:0 0 10px;overflow-wrap:anywhere}
+    .subtitle{color:#6c7a8f;font-size:13px;line-height:1.6}.actions{display:flex;gap:8px;flex-wrap:wrap}
+    button{cursor:pointer;padding:10px 13px;border:1px solid #dbe1e8;background:#fff;border-radius:10px;color:#33445c;font-size:13px;font-weight:650}
+    button:hover{border-color:#9eacbd;background:#f9fafc}
+    .metrics{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin:22px 0 25px}
+    .metric,.panel{background:#fff;border:1px solid #e4e9f1;border-radius:16px;box-shadow:0 2px 10px rgba(24,46,75,.025)}
+    .metric{padding:19px 18px;min-height:110px}.metric .value{font-size:26px;font-weight:750;letter-spacing:-.045em;margin:7px 0 6px}
+    .metric .note{font-size:11px;line-height:1.5;color:#8190a2}
+    .section{margin-top:26px}.section-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 12px}
+    h2{font-size:17px;letter-spacing:-.02em;margin:0} .section-count{font-size:12px;color:#7a8798}
+    .panel{padding:20px}.overview{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+    .tiny{font-size:12px;color:#79879b}.overview p{font-size:14px;line-height:1.7;margin:7px 0 0;white-space:pre-wrap}
+    .toolbar{display:flex;flex-wrap:wrap;gap:9px;margin-bottom:13px}
+    .toolbar input{min-width:180px;flex:1} .toolbar input,.toolbar select{background:white;border:1px solid #dfe6ee;border-radius:10px;padding:10px 12px;color:#344459;font-size:13px}
+    .findings{display:grid;gap:10px}details{background:#fff;border:1px solid #e0e7ee;border-radius:13px;overflow:hidden}
+    details[open]{border-color:#bfcbd8;box-shadow:0 7px 18px rgba(24,46,75,.045)}
+    summary{list-style:none;display:flex;align-items:center;justify-content:space-between;padding:16px 18px;gap:14px;cursor:pointer}
+    summary::-webkit-details-marker{display:none}.finding-title{font-size:14px;font-weight:700;line-height:1.5}
+    .pills{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}.pill{border-radius:5px;padding:4px 7px;background:#f0f3f7;color:#5e6b80;font-size:10px;font-weight:700}
+    .pill.critical,.pill.high{background:#fff0ef;color:#ad3c35}.pill.medium{background:#fff5e5;color:#a96918}
+    .pill.fixed,.pill.verified{background:#eaf7f1;color:#18744f}.pill.open,.pill.needs-decision{background:#fff4e8;color:#97601d}
+    .chevron{color:#8190a2;font-size:17px}details[open] .chevron{transform:rotate(90deg)}
+    .detail{border-top:1px solid #e9edf3;padding:18px;display:grid;grid-template-columns:1fr 1fr;gap:18px}
+    .block label{display:block;color:#728096;font-size:11px;letter-spacing:.07em;text-transform:uppercase;font-weight:750;margin:0 0 8px}
+    .block p{margin:0;color:#394a60;font-size:13px;line-height:1.7;white-space:pre-wrap;overflow-wrap:anywhere}
+    .full{grid-column:1/-1}.repair{border-left:3px solid #b3c8e6;padding-left:12px;margin:10px 0}
+    .rounds{display:grid;gap:11px}.round{border:1px solid #e3e9f0;background:#fff;border-radius:12px;padding:16px 18px}
+    .roundhead{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+    .roundmeta{color:#748297;font-size:12px;margin-top:8px;line-height:1.8}.events{margin-top:12px;border-top:1px solid #e8edf3;padding-top:10px}
+    .event{font-size:12px;line-height:1.7;padding:4px 0;color:#485a72;white-space:pre-wrap;overflow-wrap:anywhere}
+    .muted{color:#8793a6}.empty{text-align:center;background:#fff;padding:32px;color:#718096;border:1px dashed #d4dce7;border-radius:12px}
+    .footer{font-size:12px;color:#8390a2;margin-top:30px;line-height:1.7}
+    @media(max-width:850px){.metrics{grid-template-columns:repeat(2,1fr)}.overview{grid-template-columns:1fr}.heading{display:block}.actions{margin-top:17px}}
+    @media(max-width:560px){.shell{padding:25px 13px 60px}.metrics{gap:8px}.metric{min-height:96px;padding:13px}.metric .value{font-size:22px}.detail{grid-template-columns:1fr}.full{grid-column:auto}}
+    @media print{body{background:#fff}.shell{max-width:none;padding:0}.actions,.toolbar{display:none}.metric,.panel,details,.round{box-shadow:none;break-inside:avoid}details .detail{display:grid!important}details:not([open]) .detail{display:grid!important}.chevron{display:none}}
+  </style>
+</head>
+<body>
+<main class="shell">
+  <div class="eyebrow">Adversarial Verification · Local dossier</div>
+  <div class="heading">
+    <div><h1 id="taskTitle">审查报告</h1><div class="subtitle" id="taskMeta"></div></div>
+    <div class="actions"><button id="toggleAll" type="button">展开全部问题</button><button id="export" type="button">导出 JSON</button><button id="print" type="button">打印 / PDF</button></div>
+  </div>
+  <div class="metrics" id="metrics"></div>
+  <section class="section"><div class="section-head"><h2>审查结论</h2></div><div class="panel overview" id="overview"></div></section>
+  <section class="section"><div class="section-head"><h2>问题与修复跟踪</h2><span class="section-count" id="findingCount"></span></div>
+    <div class="toolbar"><input id="search" type="search" placeholder="搜索问题、证据、方案或修复记录" aria-label="搜索问题"><select id="severity" aria-label="严重程度"><option value="">全部严重程度</option></select><select id="status" aria-label="处理状态"><option value="">全部状态</option></select><select id="attribution" aria-label="变更归因"><option value="">全部变更归因</option></select></div>
+    <div id="findings" class="findings"></div>
+  </section>
+  <section class="section"><div class="section-head"><h2>审查轮次与活动记录</h2><span class="section-count" id="roundCount"></span></div><div id="rounds" class="rounds"></div></section>
+  <div class="footer">本报告是本地静态 HTML，无外部脚本、网络请求或后台服务。时间仅基于实际记录点计算；缺失的 Token 数据不会推断为 0。READY 不意味着代码绝对无缺陷或已获生产发布授权。</div>
+</main>
+<script>
+"use strict";
+const data=__REPORT_DATA__;
+const $=id=>document.getElementById(id);
+const safe=v=>String(v===null||v===undefined?"":v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const txt=v=>v===null||v===undefined||v===""?"—":String(v);
+const fmtDate=v=>{if(!v)return "—";const d=new Date(v);return isNaN(d)?"—":d.toLocaleString("zh-CN",{hour12:false})};
+const fmtDur=(a,b)=>{if(!a||!b)return null;let n=Math.max(0,Math.round((new Date(b)-new Date(a))/1000));if(!Number.isFinite(n))return null;return n>=3600?Math.floor(n/3600)+"h "+Math.floor(n%3600/60)+"m":n>=60?Math.floor(n/60)+"m "+n%60+"s":n+"s"};
+const badge=(v,klass)=>'<span class="pill '+safe(klass||v||"")+'">'+safe(txt(v))+'</span>';
+const lang={open:"待处理",fixed:"已修复",verified:"已复核",wontfix:"不修复", "needs-decision":"待决策", introduced:"本次引入",worsened:"本次加剧","pre-existing":"历史已有",unknown:"归因未定",critical:"严重",high:"高",medium:"中",low:"低",info:"提示"};
+const findings=data.findings||[],rounds=data.sessions||[];
+const latest=rounds.length?rounds[rounds.length-1]:{};
+$("taskTitle").textContent=data.task||"未命名任务";
+$("taskMeta").textContent="归档标识："+data.identity+"  ·  创建："+fmtDate(data.created_at)+"  ·  更新："+fmtDate(data.updated_at);
+function metric(label,value,note){return '<div class="metric"><div class="eyebrow">'+safe(label)+'</div><div class="value">'+safe(txt(value))+'</div><div class="note">'+safe(note||"")+'</div></div>'}
+const resolved=findings.filter(f=>f.status==="fixed"||f.status==="verified").length;
+const pending=findings.filter(f=>f.status==="open"||f.status==="needs-decision").length;
+const durations=rounds.map(s=>s.started_at&&s.ended_at?Math.max(0,(new Date(s.ended_at)-new Date(s.started_at))/1000):null);
+const measured=durations.filter(x=>x!==null&&Number.isFinite(x));
+const seconds=measured.reduce((a,b)=>a+b,0);
+const duration=measured.length? (seconds>=3600?Math.floor(seconds/3600)+"h "+Math.floor(seconds%3600/60)+"m":Math.floor(seconds/60)+"m "+Math.floor(seconds%60)+"s"):"—";
+const tokens=rounds.filter(s=>s.input_tokens!==null&&s.input_tokens!==undefined&&s.output_tokens!==null&&s.output_tokens!==undefined);
+const sumTokens=tokens.reduce((n,s)=>n+s.input_tokens+s.output_tokens,0);
+$("metrics").innerHTML=
+ metric("最新结论",txt(latest.assessment),latest.ended_at?"已结束第 "+latest.round+" 轮":"本轮进行中")+
+ metric("累计问题",findings.length,"去重后的独立问题")+
+ metric("已修复 / 待处理",resolved+" / "+pending,"含已复核及待决策")+
+ metric("记录审查耗时",duration,measured.length+"/"+rounds.length+" 轮提供起止时间")+
+ metric("Token 消耗",tokens.length?sumTokens.toLocaleString():"—",tokens.length?tokens.length+"/"+rounds.length+" 轮有完整输入/输出记录":"未获得可信用量数据");
+$("overview").innerHTML='<div><div class="eyebrow">最终判断</div><p><strong>'+safe(txt(latest.assessment))+'</strong></p><div class="tiny">本次任务共 '+rounds.length+' 轮 Review · 最近一次开始 '+safe(fmtDate(latest.started_at))+'</div></div>'+
+ '<div><div class="eyebrow">最近一轮总结</div><p>'+safe(txt(latest.summary))+'</p></div>';
+const options=(id,values)=>{for(const v of values){const o=document.createElement("option");o.value=v;o.textContent=lang[v]||v;$(id).appendChild(o)}};
+options("severity",["critical","high","medium","low","info"]);
+options("status",["open","fixed","verified","wontfix","needs-decision"]);
+options("attribution",["introduced","worsened","pre-existing","unknown"]);
+const block=(label,value,extra)=>'<div class="block '+(extra||"")+'"><label>'+safe(label)+'</label><p>'+safe(txt(value))+'</p></div>';
+function renderFindings(){
+ const q=$("search").value.toLowerCase(),severity=$("severity").value,status=$("status").value,attribution=$("attribution").value;
+ const selected=findings.filter(f=>{
+   const all=[f.id,f.title,f.category,f.evidence,f.proposal,f.reviewer].concat((f.repairs||[]).map(x=>x.description+" "+x.verification)).join(" ").toLowerCase();
+   return (!q||all.includes(q))&&(!severity||f.severity===severity)&&(!status||f.status===status)&&(!attribution||f.attribution===attribution)
+ });
+ $("findingCount").textContent=selected.length+" / "+findings.length+" 项";
+ $("findings").innerHTML=selected.map(f=>{
+   const repairs=(f.repairs||[]).map(r=>'<div class="repair"><div class="tiny">第 '+safe(r.round)+' 轮 · '+safe(fmtDate(r.at))+' · '+safe(lang[r.status]||r.status)+' · '+safe(txt(r.actor))+'</div>'+block("实际修复",r.description)+block("复核结果",r.verification)+'</div>').join("");
+   return '<details class="finding"><summary><div><div class="finding-title">'+safe(f.id+" · "+f.title)+'</div><div class="pills">'+badge(lang[f.severity]||f.severity,f.severity)+badge(lang[f.status]||f.status,f.status)+badge(lang[f.attribution]||f.attribution,f.attribution)+badge(f.category)+'</div></div><span class="chevron">›</span></summary><div class="detail">'+block("发现证据",f.evidence)+block("Review Proposal",f.proposal)+block("首次发现 / 最近出现","第 "+f.first_seen_round+" 轮 / 第 "+f.last_seen_round+" 轮")+block("Reviewer",f.reviewer)+'<div class="block full"><label>修复与复核历史</label>'+(repairs||'<p class="muted">尚无修复记录</p>')+'</div></div></details>'
+ }).join("")||'<div class="empty">没有符合筛选条件的问题</div>';
+}
+["search","severity","status","attribution"].forEach(id=>$(id).addEventListener(id==="search"?"input":"change",renderFindings));
+renderFindings();
+$("roundCount").textContent=rounds.length+" 轮";
+$("rounds").innerHTML=rounds.map(s=>{
+ const tok=(s.input_tokens!==null&&s.input_tokens!==undefined)||(s.output_tokens!==null&&s.output_tokens!==undefined)?"输入 "+txt(s.input_tokens)+" / 输出 "+txt(s.output_tokens)+" · "+txt(s.token_source):"未提供 Token 用量";
+ const events=(s.events||[]).map(e=>'<div class="event"><strong>'+safe(e.kind)+'</strong> · '+safe(fmtDate(e.at))+' · '+safe(e.text)+'</div>').join("");
+ return '<section class="round"><div class="roundhead"><strong>Review 第 '+safe(s.round)+' 轮</strong>'+badge(s.assessment||"进行中")+'</div><div class="roundmeta">开始 '+safe(fmtDate(s.started_at))+' · 结束 '+safe(fmtDate(s.ended_at))+' · 耗时 '+safe(fmtDur(s.started_at,s.ended_at)||"进行中")+'<br>风险 '+safe(txt(s.risk_score))+' / 6 · Agent '+safe(txt(s.agents))+' · '+safe(tok)+'</div>'+(s.summary?'<div class="event"><strong>结论：</strong>'+safe(s.summary)+'</div>':"")+(events?'<div class="events">'+events+'</div>':"")+'</section>';
+}).join("")||'<div class="empty">暂无审查轮次</div>';
+let allOpen=false;
+$("toggleAll").addEventListener("click",()=>{allOpen=!allOpen;document.querySelectorAll("details.finding").forEach(e=>e.open=allOpen);$("toggleAll").textContent=allOpen?"收起全部问题":"展开全部问题"});
+$("print").addEventListener("click",()=>window.print());
+$("export").addEventListener("click",()=>{const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json;charset=utf-8"});const u=URL.createObjectURL(blob);const a=document.createElement("a");a.href=u;a.download="adversarial-review-"+(data.task_id||"task")+".json";a.click();setTimeout(()=>URL.revokeObjectURL(u),1500)});
+</script>
+</body>
+</html>

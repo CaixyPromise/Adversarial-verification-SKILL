@@ -1,194 +1,83 @@
-# adversarial-verification
+# Adversarial Verification
 
-An adversarial verification skill for agentic coding workflows.
+A lightweight, **requirement-driven and risk-adaptive** code-review skill for AI coding agents.
 
-This SKILL is inspired by Claude Code's adversarial verification and verifier-agent design, then repackaged as a standalone skill that can be reused by other coding agents.
+It reviews whether an implementation meets the **actual user intent**, preserves business invariants, and avoids material regressions. Independent adversarial verification remains available, but is **not a compulsory ritual** for trivial changes. Findings and evidence matter more than obtaining a PASS label.
 
-Chinese version: [`README_zh.md`](./README_zh.md)
+中文说明：[README_zh.md](./README_zh.md)
 
-This skill is designed to force a clean separation between:
+## How it works
 
-- the implementation agent
-- the independent verifier subagent
-- the parent/main thread that must respond to verifier failures with root-cause discipline
+1. **Understand:** determine intended behavior, key business flow, invariants and material unknowns from the user request and codebase.
+2. **Assess:** score complexity, impact and uncertainty, 0–2 each; total 0–6.
+3. **Review:** cover requirements, affected paths, regressions and relevant technical risks in one broad round.
+4. **Resolve:** address proven blockers at their root cause and ask a human for material unresolved business decisions.
+5. **Finish:** targeted re-verification, explicit coverage and residual risks; no indefinite PASS-chasing loop.
 
-The core idea is simple:
+## Review budget: up to three verifier subagents
 
-- the verifier is not there to confirm that things “probably work”
-- the verifier is there to try to break the change
-- the main thread is not allowed to game fixtures or patch blindly just to get back to green
+| Risk score | Default verifier subagents | Typical use |
+| --- | --- | --- |
+| 0–1 | 0 | Cosmetic or isolated, directly check the result |
+| 2–3 | 1 | Focused feature/behavior check |
+| 4–5 | 2 | Business flow and a distinct technical risk |
+| 6 | 3 | Complementary business, safety/state and regression perspectives |
 
-## What this skill is for
+A third verifier is also allowed for a 4–5 score when a distinct material risk justifies it. **Three is a cap, not a quota**; do not assign multiple agents the same question. Serious security/authorization, data-integrity, financial or irreversible operations receive elevated scrutiny even for short diffs. If business rules are materially unclear, resolve them from evidence or ask for a decision before multiplying reviewers; ambiguity alone does not justify more agents.
 
-Use this skill when you want an AI coding workflow to enforce a stronger software-quality gate after non-trivial implementation work.
+### Reviewer roles and how they review
 
-It is especially useful for:
+- **A — Requirement correctness:** independently derive acceptance criteria and business invariants, trace the full intended journey and find semantic mistakes or missing scenarios.
+- **B — Implementation consistency:** search progressively (changed module → direct dependencies → relevant shared code → selective history), compare established code and business semantics, and prefer existing reuse or module-local extraction. A shared utility package is appropriate only when stable cross-module technical behavior recurs; shared business rules belong in domain services/policies. **Never abstract merely because code looks similar.**
+- **C — System engineering:** assess applicable performance, security, long-term maintenance, system compatibility and distributed failure/concurrency risks using targeted probes.
 
-- backend and API changes
-- frontend flows with runtime interaction risk
-- database and migration changes
-- shell, CLI, and automation surfaces
-- security-sensitive paths
-- performance-sensitive or scale-sensitive work
-- data pipelines and async jobs
-- mobile or desktop client behavior
-- infra, deployment, and ops changes
-- LLM and multi-agent workflow changes
+With **one** reviewer, cover all three lenses in proportion to risk. With **two**, default to A and combined B+C (or split differently for the dominant risk); parent checks gaps. With **three**, assign A/B/C separately. Role-specific investigation guidance is in `references/review-playbook.md`. No role is a reason to demand refactoring purely for reuse.
 
-## What is included
+## Result format
 
-- `SKILL.md`: the main skill entrypoint
-- `agents/openai.yaml`: agent wiring/config scaffold
-- `references/playbook.md`: adversarial probe patterns
-- `references/domain-checklists.md`: performance, database, memory, security, business-correctness, and anti-cheating review domains
-- `references/prompt-templates.md`: reusable verifier prompts by change type
-- `references/parent-workflow.md`: parent-agent to verifier-subagent workflow
-- `references/security-review-checklist.md`: structured security review checklist
-- `references/root-cause-fix-policy.md`: rules for how the main thread should respond to verifier `FAIL`
-- `references/main-thread-discipline.md`: hard constraints against fixture-gaming, shallow patching, and user-approval bypass
+- `READY`: applicable coverage sufficient, no known blockers in reviewed scope.
+- `CHANGES_NEEDED`: verified blocking defects remain.
+- `NEEDS_DECISION`: a material business/product decision is missing.
+- `PARTIAL`: required evidence or verification environment is unavailable.
+
+These are **delivery assessments**, not mathematical claims of correctness or production approval. Reviewers **independently derive expected behavior** from the request and trusted contracts before accepting the implementer's rationale. Where feasible, compare baseline and changed behavior and label findings **introduced / worsened / pre-existing / unknown**. Keep unrelated existing problems out of the current repair scope while escalating serious historical safety issues. Every blocking finding needs a specific violated rule, trigger, code/runtime evidence, impact, and repair direction. Improvements and open hypotheses are separate.
+
+One broad review round is the default. Fixes receive targeted re-verification of the issue and affected paths. After two unsuccessful repair cycles for the same blocker, stop automatic looping and escalate with evidence.
+
+## Optional local review dossier
+
+For review evidence, costs and repair history, use the standard-library helper `scripts/review_report.py` (see [reporting guide](references/reporting.md)). It generates **one reusable JSON and static interactive HTML pair per task**. Reviewers submit proposals; the implementer records actual fixes and verification; subsequent review rounds update the same dossier. The HTML supports filtering, expand/collapse, per-round history, printing and JSON export without a web server. Timing is measured only between recorded invocations; token figures appear only when supplied by trustworthy telemetry. Reports stay local and are protected with `.git/info/exclude` rather than committed.
+
+## Files
+
+- `SKILL.md` — authoritative workflow and 0–3 agent allocation.
+- `references/review-playbook.md` — role-specific investigation methods and optional engineering probes.
+- `references/engineering-quality.md` — evidence-based engineering-quality principles.
+- `references/project-conventions.md` — applicable repository/agent instructions, language and toolchain constraints.
+- `references/data-access-practices.md` — N+1, indexes, transactions, deadlocks, cache consistency.
+- `references/frontend-experience.md` — theme/component reuse, plain-language UX and no leaked conversation notes in UI.
+- `references/security-review-checklist.md` — optional security guidance.
+- `agents/openai.yaml` — skill interface metadata.
+- `scripts/review_report.py` and `templates/review-report.html` — offline task dossier generator and static report template.
+- `references/reporting.md` — usage, archive discovery, provenance and Git safety.
 
 ## Install in Codex
 
-This skill is packaged so it can be installed into Codex as a standalone local skill under `~/.codex/skills`.
-
-After installation, restart Codex to pick up the new skill.
-
-### Option 1: direct `curl` install from GitHub
+The repository **root** is the skill directory; it contains `SKILL.md` directly.
 
 ```bash
-export CODEX_HOME="${CODEX_HOME:-$HOME/.codex}"
-mkdir -p "$CODEX_HOME/skills"
-
-curl -L "https://github.com/CaixyPromise/Adversarial-verification-SKILL/archive/refs/heads/main.tar.gz" \
-  | tar -xz --strip-components=2 -C "$CODEX_HOME/skills" \
-      "Adversarial-verification-SKILL-main/skills/adversarial-verification"
+export CODEX_HOME="$HOME/.codex" # change if you use a custom CODEX_HOME
+mkdir -p "$CODEX_HOME/skills/adversarial-verification"
+curl -fsSL "https://github.com/CaixyPromise/Adversarial-verification-SKILL/archive/refs/heads/main.tar.gz" \
+  | tar -xz --strip-components=1 -C "$CODEX_HOME/skills/adversarial-verification"
 ```
 
-### Option 2: install with Codex `skill-installer`
+Restart Codex after installation. For development, clone the repository directly into the same destination instead.
 
-If already has Codex's `skill-installer` helper, the equivalent install flow is:
+## Migration from v0.1
 
-```bash
-export CODEX_HOME="${CODEX_HOME:-$HOME/.codex}"
-
-$CODEX_HOME/skills/.system/skill-installer/scripts/install-skill-from-github.py \
-  --repo CaixyPromise/Adversarial-verification-SKILL \
-  --path skills/adversarial-verification
-```
-
-The direct `curl` path above is useful when you want a lightweight installation path that does not depend on the helper script.
-
-## Design principles
-
-This skill encodes a few strong opinions:
-
-- verification should be independent from implementation
-- passing tests is context, not proof
-- happy-path validation is not enough
-- the verifier should actively try to break the system
-- the main thread should fix root causes, not symptoms
-- ambiguous behavior changes should be escalated to the user instead of guessed
-
-## Verifier verdict contract
-
-The verifier is expected to end with exactly one of:
-
-- `VERDICT: PASS`
-- `VERDICT: FAIL`
-- `VERDICT: PARTIAL`
-
-The verifier should provide evidence, not vibes:
-
-- commands run
-- observed outputs
-- expected vs actual behavior
-- a concrete result for each check
-
-## Specialized verifier prompts
-
-The prompt templates currently cover:
-
-- general
-- frontend
-- backend/API
-- migration/database
-- CLI/script
-- security/penetration
-- performance/scalability
-- data-pipeline/async-job
-- mobile/desktop-client
-- infra/deployment/ops
-- LLM/agent-workflow
-
-## Usage example
-
-### 1. Parent agent launches a verifier subagent
-
-Use the skill after implementation is complete and the work is non-trivial.
-
-Example parent-to-verifier prompt:
-
-```text
-Use the adversarial-verification skill in this directory to independently verify this implementation.
-
-Original user request:
-[paste request]
-
-Changed files:
-[paste changed files]
-
-Implementation summary:
-[paste summary]
-
-Success criteria / plan path:
-[optional]
-
-Suggested commands:
-[optional]
-
-Requirements:
-- Treat this as non-trivial implementation verification.
-- Do not modify project files.
-- Run the feature directly, not just tests.
-- Run at least one adversarial probe.
-- Choose the specialized verifier prompt that best matches the change type.
-- If the implementation appears to pass by distorting business behavior, gaming fixtures, or weakening the contract, call that out explicitly.
-- End with exactly one of: VERDICT: PASS / VERDICT: FAIL / VERDICT: PARTIAL.
-```
-
-### 2. Verifier workflow
-
-The verifier should:
-
-1. read project instructions and relevant run commands
-2. run build/test/lint/typecheck when applicable
-3. run the changed behavior directly
-4. perform at least one adversarial probe
-5. inspect actual output, side effects, and runtime behavior
-6. issue a verdict with evidence
-
-### 3. Main-thread behavior after `FAIL`
-
-The parent/main thread should:
-
-1. treat `FAIL` as a delivery blocker
-2. read `references/main-thread-discipline.md`
-3. read `references/root-cause-fix-policy.md`
-4. reproduce the failure directly
-5. add temporary diagnostics/logging when the cause is unclear
-6. fix the root cause in business/functional terms
-7. ask the user before making ambiguous behavior changes
-8. re-run verification
-
-## Security review usage
-
-For security-sensitive work:
-
-- use the security/penetration-specific verifier prompt
-- use `references/security-review-checklist.md`
-- lead with the highest-risk confirmed issue
-- do not report `PASS` if a `Critical` or `High` issue is confirmed
+The old `PASS/FAIL/PARTIAL` contract and 11 category-specific prompt templates have been replaced by a requirement-first decision and a compact on-demand playbook. **Update any integrations parsing the old verdict strings.** The original independent, read-only verifier concept and root-cause repair policy remain.
 
 ## License
 
-MIT. See `LICENSE`.
+MIT.
