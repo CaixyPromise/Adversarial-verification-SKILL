@@ -1,6 +1,6 @@
 # Engineering Quality — Evidence-Based Review Reference
 
-> **Use selectively, not as a compulsory gate.** This guide defines *how to judge* whether a change is good engineering. The original user requirements, domain invariants, repository conventions and actual operational constraints take precedence. It supports the A/B/C reviewers in \`SKILL.md\`, without adding agents, a new score, a review round or mandatory artifact.
+> **Use selectively, not as a compulsory gate.** This guide defines *how to judge* whether a change is good engineering. The original user requirements, domain invariants, repository conventions and actual operational constraints take precedence. It supports the A/B/C reviewers in `SKILL.md`, without adding agents, a new score, a review round or mandatory artifact.
 
 ## Quality standard and decision rule
 
@@ -71,7 +71,7 @@ Property-based tests, targeted mutation tests, fuzzing, contract tests and failu
 - **Block** only a proven requirement/contract/invariant violation, a material regression introduced or worsened by the change, or a significant safety/production risk with a credible mechanism.
 - **Suggest** non-critical refactors, clarity improvements or opportunities for reuse, explaining the trade-off; do not automatically broaden the change scope.
 - **Record as unknown** cases without a trustworthy requirement, baseline or feasible runtime evidence. Escalate essential business decisions to the human.
-- Finish after relevant coverage and targeted repair verification under the stopping rules in \`SKILL.md\`; **not** when every stylistic preference has been satisfied.
+- Finish after relevant coverage and targeted repair verification under the stopping rules in `SKILL.md`; **not** when every stylistic preference has been satisfied.
 
 Use **evidence-supported qualitative judgments**, not a blanket numerical "code quality score." The 0–6 number in the main Skill is a **review allocation/risk heuristic**, not a quality grade.
 
