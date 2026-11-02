@@ -176,9 +176,24 @@ if not report.is_file():
 original = json.loads(report.read_text(encoding="utf-8"))
 assert original["schema"] == "adversarial-verification-report/v1"
 
-# 修改 original["findings"] / original["sessions"] 中真正需要的内容，
-# 保留现有 ID、轮次、repairs 和历史数据。记录实际证据，不伪造。
-# 例如 original["findings"][0]["proposal"] = "..."
+# 示例：只更新已经存在的 F001；如果问题不存在，拒绝猜测或重新编号。
+finding = next((f for f in original["findings"] if f["id"] == "F001"), None)
+if finding is None:
+    raise RuntimeError("F001 not found; do not invent a duplicate issue")
+
+finding["evidence"] = "服务层缺少资源归属校验（以实际证据为准）"
+finding["proposal"] = "在服务层增加权限归属校验"
+
+# 实际修复后才追加 repairs，不要只凭 Proposal 声称已修复：
+# finding["status"] = "fixed"
+# finding.setdefault("repairs", []).append({
+#     "round": original["sessions"][-1]["round"],
+#     "at": "实际修复发生时记录的 ISO 8601 时间",
+#     "status": "fixed",
+#     "description": "具体执行的修改",
+#     "verification": "",
+#     "actor": "Implementer"
+# })
 
 with tempfile.NamedTemporaryFile("w", encoding="utf-8",
                                  dir=report.parent, delete=False) as stream:
