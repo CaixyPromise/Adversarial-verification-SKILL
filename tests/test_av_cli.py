@@ -123,6 +123,31 @@ class TestAvCLI(unittest.TestCase):
             self.assertEqual(len(backups), 1)
             self.assertEqual((backups[0] / "SKILL.md").read_text(), "old")
 
+    def test_windows_launcher_install_and_reinstall(self):
+        with tempfile.TemporaryDirectory() as temp:
+            with redirect_stdout(StringIO()):
+                self.assertEqual(av.install_launcher(dest=temp, windows=True), 0)
+            file = Path(temp) / "av.cmd"
+            self.assertTrue(file.exists())
+            content = file.read_text(encoding="utf-8")
+            self.assertIn("@echo off", content)
+            self.assertIn("REM Adversarial Verification launcher", content)
+            self.assertIn(" %*", content)
+            self.assertIn("exit /b %errorlevel%", content)
+            with redirect_stdout(StringIO()):
+                self.assertEqual(av.install_launcher(dest=temp, windows=True), 0)
+            file.write_text("@echo off\necho unrelated tool\n", encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "Refusing to replace another program"):
+                av.install_launcher(dest=temp, windows=True)
+
+    def test_windows_launcher_quotes_paths_and_escaped_percent(self):
+        with mock.patch.object(av.sys, "executable", r"C:\Program Files\Python312\python.exe"):
+            body = av.launcher_body(windows=True)
+            self.assertIn('"C:\\Program Files\\Python312\\python.exe"', body)
+            self.assertIn('"', body)
+            self.assertIn(" %*", body)
+            self.assertIn("REM Adversarial Verification launcher", body)
+
     def test_valid_archive(self):
         with tempfile.TemporaryDirectory() as temp:
             entries = [
