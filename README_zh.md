@@ -93,18 +93,15 @@ av update --yes       # 明确允许非交互更新
 - `scripts/review_report.py`、`templates/review-report.html`：兼容原命令的静态报告生成脚本与模板。
 - `references/reporting.md`：命令、同任务归档复用、数据来源与 Git 安全说明。
 
-## Codex 安装
+## 安装与更新（支持 Windows / macOS / Linux）
 
-仓库的**根目录**就是 Skill 目录，`SKILL.md` 直接位于根目录。
+**完整教程请阅读 [INSTALL.md](INSTALL.md)**，包括 Windows PowerShell 下载、`av.cmd` 命令安装、用户 PATH 配置、macOS/Linux 安装、旧版本升级、Git 克隆更新、回滚、卸载及故障排查。
 
-```bash
-export CODEX_HOME="$HOME/.codex" # 如已有自定义路径请相应修改
-mkdir -p "$CODEX_HOME/skills/adversarial-verification"
-curl -fsSL "https://github.com/CaixyPromise/Adversarial-verification-SKILL/archive/refs/heads/main.tar.gz" \
-  | tar -xz --strip-components=1 -C "$CODEX_HOME/skills/adversarial-verification"
-```
+需要 Python 3.9+，无需 pip 依赖。Skill 的 `SKILL.md` 位于仓库根目录，安装在 `~/.codex/skills/adversarial-verification`（Windows 为 `%USERPROFILE%\.codex\skills\adversarial-verification`）。
 
-安装或更新后重新启动 Codex；开发时也可以直接将仓库 clone 到同一路径。
+Windows 完成安装后，在 Skill 目录执行 `py -3 scripts/av.py install-cli`，会生成 `~/.local/bin/av.cmd`。macOS/Linux 则执行 `python3 scripts/av.py install-cli`。将对应 `~/.local/bin` 加入 PATH 后，即可执行 `av version`、`av report ...`、`av check-update` 和 `av update`。
+
+报告与版本缓存相互独立；同一需求继续复用旧报告。CLI 更新必须由用户主动执行；Git 克隆版本应使用 `git pull --ff-only`。
 
 ## 从 v0.1 升级
 

@@ -87,18 +87,13 @@ If the launcher directory is not on `PATH`, call `python3 /path/to/skill/scripts
 - `scripts/review_report.py` and `templates/review-report.html` — backwards-compatible offline dossier generator and static report template.
 - `references/reporting.md` — usage, archive discovery, provenance and Git safety.
 
-## Install in Codex
+## Installation (Windows / macOS / Linux)
 
-The repository **root** is the skill directory; it contains `SKILL.md` directly.
+See **[INSTALL.md](INSTALL.md)** for the complete guide: PowerShell installation on Windows 10/11, `av.cmd` launcher and user PATH setup, macOS/Linux installation, previous-version upgrades, Git-clone workflow, rollback and troubleshooting.
 
-```bash
-export CODEX_HOME="$HOME/.codex" # change if you use a custom CODEX_HOME
-mkdir -p "$CODEX_HOME/skills/adversarial-verification"
-curl -fsSL "https://github.com/CaixyPromise/Adversarial-verification-SKILL/archive/refs/heads/main.tar.gz" \
-  | tar -xz --strip-components=1 -C "$CODEX_HOME/skills/adversarial-verification"
-```
+**Quick start:** install Python 3.9+ and place this repository's root contents in your Codex skill folder (`~/.codex/skills/adversarial-verification`). Then run `python3 scripts/av.py install-cli` on macOS/Linux, or `py -3 scripts/av.py install-cli` on Windows from the installed Skill folder. Windows creates `~/.local/bin/av.cmd`, Unix creates `~/.local/bin/av`.
 
-Restart Codex after installation. For development, clone the repository directly into the same destination instead.
+`av version` displays the installed version; `av check-update` checks GitHub; `av update` asks for confirmation before replacing an archive-installed Skill. Git checkouts must update through Git. Review reports stay in the reviewed project, not in the Skill directory.
 
 ## Migration from v0.1
 

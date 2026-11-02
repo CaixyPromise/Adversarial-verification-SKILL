@@ -43,3 +43,19 @@ jobs:
           )
           PY
           node --check /tmp/adversarial-review-report.js
+
+  windows-smoke:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Test CLI and review reports on Windows
+        run: python -m unittest discover -s tests -v
+      - name: Verify Windows launcher and version
+        shell: pwsh
+        run: |
+          $bin = Join-Path $env:RUNNER_TEMP 'av-cli'
+          python scripts/av.py install-cli --dest $bin
+          & (Join-Path $bin 'av.cmd') version

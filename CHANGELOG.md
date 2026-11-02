@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.1 — 2026-11-02
+
+- Add comprehensive [INSTALL.md](INSTALL.md) for Windows PowerShell, macOS and Linux, including fresh installs, upgrades, PATH, rollback, uninstall and troubleshooting.
+- Support Windows `av.cmd` launchers through `av install-cli` without administrator rights, while preserving the Unix launcher and report CLI.
+- Test Windows launcher generation, quote handling and existing-launcher protections; run CLI/report tests on both Linux and Windows CI runners.
+
 ## 0.3.0 — 2026-11-02
 
 - Introduce `av` CLI that delegates to existing JSON/HTML review report commands without breaking task-level archive reuse.

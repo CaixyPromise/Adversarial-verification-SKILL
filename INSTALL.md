@@ -38,8 +38,8 @@ New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
 try {
     $zipPath = Join-Path $tempDir 'skill.zip'
     $url = "https://github.com/$repo/archive/refs/heads/main.zip"
-    Invoke-WebRequest -Uri $url -OutFile $zipPath
-    Expand-Archive -LiteralPath $zipPath -DestinationPath $tempDir -Force
+    Invoke-WebRequest -Uri $url -OutFile $zipPath -ErrorAction Stop
+    Expand-Archive -LiteralPath $zipPath -DestinationPath $tempDir -Force -ErrorAction Stop
 
     $source = Join-Path $tempDir 'Adversarial-verification-SKILL-main'
     if (-not (Test-Path -LiteralPath (Join-Path $source 'SKILL.md'))) {
@@ -47,7 +47,7 @@ try {
     }
 
     New-Item -ItemType Directory -Path (Split-Path -Parent $skillDir) -Force | Out-Null
-    Move-Item -LiteralPath $source -Destination $skillDir
+    Move-Item -LiteralPath $source -Destination $skillDir -ErrorAction Stop
 }
 finally {
     Remove-Item -LiteralPath $tempDir -Recurse -Force -ErrorAction SilentlyContinue
