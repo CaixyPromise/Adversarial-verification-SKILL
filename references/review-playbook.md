@@ -1,6 +1,6 @@
 # Review Playbook — Role-guided Engineering Review
 
-Use only role sections and probes relevant to the change. These are **reasoning techniques**, not a ritual checklist. The risk score, 0–3 agent budget and stop criteria live in `SKILL.md`. Use `references/project-conventions.md` for project-aware review; apply `references/engineering-quality.md`, `references/code-structure-governance.md`, `references/data-access-practices.md` , `references/frontend-experience.md` and `references/behavioral-testing.md` **only when relevant**.
+Use only role sections and probes relevant to the change. These are **reasoning techniques**, not a ritual checklist. The risk score, 0–3 agent budget and stop criteria live in `SKILL.md`. Use `references/project-conventions.md` for project-aware review; apply `references/engineering-quality.md`, `references/code-structure-governance.md`, `references/data-access-practices.md`, `references/frontend-experience.md` and `references/behavioral-testing.md` **only when relevant**.
 
 ## Common method for every verifier
 
