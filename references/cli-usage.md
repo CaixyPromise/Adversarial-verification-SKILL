@@ -4,47 +4,48 @@
 
 ## 1. 入口、身份和存储
 
-安装 CLI 后使用 \`av\`，或直接调用 \`python3 /path/to/skill/scripts/av.py\`（Windows 用 \`py -3\`）。当工作目录不是被审查项目时，放置全局参数在 \`report\` **之前**：
+安装 CLI 后使用 `av`，或直接调用 `python3 /path/to/skill/scripts/av.py`（Windows 用 `py -3`）。当工作目录不是被审查项目时，放置全局参数在 `report` **之前**：
 
-\`\`\`bash
+```bash
 av --project /path/to/project report start --task-id ISSUE-123 --task "Permission package clone" --risk 5 --agents 2
-\`\`\`
+```
 
-同一个需求使用**完全相同的稳定 \`--task-id\`**，无论涉及几轮审查/修复。第一次 \`start\` 会创建任务级 JSON/HTML；重复 \`start\` 复用原档案，已结束轮次之后才创建新轮次。CLI 输出 \`json\` 和 \`html\` 的实际路径，不要根据示例猜测 hash 文件名。
+同一个需求使用**完全相同的稳定 `--task-id`**，无论涉及几轮审查/修复。第一次 `start` 会创建任务级 JSON/HTML；重复 `start` 复用原档案，已结束轮次之后才创建新轮次。CLI 输出 `json` 和 `html` 的实际路径，不要根据示例猜测 hash 文件名。
 
-报告优先放入项目中已有的本 Skill 归档目录，否则创建 \`.adversarial-verification/reports/\` 并验证本地 Git exclude。避免随意创建报告目录。JSON 为权威数据；HTML 是从 JSON 派生的静态视图。
+报告优先放入项目中已有的本 Skill 归档目录，否则创建 `.adversarial-verification/reports/` 并验证本地 Git exclude。避免随意创建报告目录。JSON 为权威数据；HTML 是从 JSON 派生的静态视图。
 
 ## 2. 各命令参数与角色
 
 | 命令 | 核心参数 | 使用者 / 行为 |
 | --- | --- | --- |
-| \`start\` | \`--task-id\`, 首次 \`--task\`; 可选 \`--risk 0..6\`, \`--agents 0..3\` | 主 Agent；开始/复用报告和轮次 |
-| \`finding\` | \`--title\` 必需；\`--id\`, \`--category\`, \`--severity\`, \`--attribution\`, \`--evidence\`, \`--proposal\`, \`--reviewer\` | Reviewer；只记录问题证据与修复建议，不宣称已经修好 |
-| \`fix\` | \`--id\` 和 \`--description\` 必需；\`--status\`, \`--verification\`, \`--actor\` | Implementer；实际修复后记录 Fix 和验证结果 |
-| \`event\` | \`--text\` 必需，\`--kind\` 可选 | 记录关键测试或决策 |
-| \`import\` | \`--file\` 必需，\`--dry-run\` 可选 | 先验证整批 JSON，再一次性写入问题、Fix、事件 |
-| \`finish\` | \`--assessment\` 必需；可选 \`--summary\`, \`--input-tokens\`, \`--output-tokens\`, \`--token-source\` | 主 Agent；结束本轮并生成最新报告 |
-| \`show\` / \`render\` | \`--task-id\` | 查看归档路径/计数或重新生成 HTML |
+| `start` | `--task-id`, 首次 `--task`; 可选 `--risk 0..6`, `--agents 0..3` | 主 Agent；开始/复用报告和轮次 |
+| `finding` | `--title` 必需；`--id`, `--category`, `--severity`, `--attribution`, `--evidence`, `--proposal`, `--reviewer` | Reviewer；只记录问题证据与修复建议，不宣称已经修好 |
+| `fix` | `--id` 和 `--description` 必需；`--status`, `--verification`, `--actor` | Implementer；实际修复后记录 Fix 和验证结果 |
+| `event` | `--text` 必需，`--kind` 可选 | 记录关键测试或决策 |
+| `import` | `--file` 必需，`--dry-run` 可选 | 整批验证并一次写入问题、Fix、事件和待确认事项 |
+| `decision add / resolve` | `--task-id`，新增或确认参数 | 新增待用户确认事项，或记录有真实来源的确认结果 |
+| `finish` | `--assessment` 必需；可选 `--summary`, `--input-tokens`, `--output-tokens`, `--token-source` | 主 Agent；结束本轮并生成最新报告 |
+| `show` / `render` | `--task-id` | 查看归档路径/计数或重新生成 HTML |
 
-所有命令建议显式携带 \`--task-id\`。严重度：\`critical/high/medium/low/info\`；归因：\`introduced/worsened/pre-existing/unknown\`；修复状态：\`open/fixed/verified/wontfix/needs-decision\`。全局命令及安装参见 [INSTALL.md](../INSTALL.md)。
+所有命令建议显式携带 `--task-id`。严重度：`critical/high/medium/low/info`；归因：`introduced/worsened/pre-existing/unknown`；修复状态：`open/fixed/verified/wontfix/needs-decision`。全局命令及安装参见 [INSTALL.md](../INSTALL.md)。
 
 ### 单条问题与实际修复
 
-\`\`\`bash
+```bash
 av report finding --task-id ISSUE-123 --title "Missing ownership check" --category authorization --severity high --attribution introduced --reviewer "Agent C" --evidence "PermissionService.java:82 cross-user request bypasses ownership" --proposal "Enforce resource ownership at service boundary"
 # 从 CLI 输出得到 finding_id，例如 F001
 av report fix --task-id ISSUE-123 --id F001 --status fixed --description "Added service-layer authorization"
 av report fix --task-id ISSUE-123 --id F001 --status verified --description "Authorization corrected" --verification "Cross-user negative case and targeted regression suite passed"
 av report finish --task-id ISSUE-123 --assessment READY --summary "Necessary verification completed, no known blockers"
-\`\`\`
+```
 
-\`fixed\` 表示已修改，\`verified\` 应在真实验证后使用。命令**记录**证据，不会自动运行测试、确认真实修复或自动评估模型用量。Token 仅有真实运行时计数和 \`--token-source\` 时填写，未知保持未知。
+`fixed` 表示已修改，`verified` 应在真实验证后使用。命令**记录**证据，不会自动运行测试、确认真实修复或自动评估模型用量。Token 仅有真实运行时计数和 `--token-source` 时填写，未知保持未知。
 
 ## 3. 批量导入：减少 Tool Calls
 
 JSON 文件按以下格式准备（建议放在项目已忽略的报告目录或临时目录，**不要提交包含敏感信息的 JSON 到 Git**）：
 
-\`\`\`json
+```json
 {
   "schema": "adversarial-verification-import/v1",
   "findings": [
@@ -82,33 +83,110 @@ JSON 文件按以下格式准备（建议放在项目已忽略的报告目录或
     {"kind": "test", "text": "Targeted authorization regression tests completed"}
   ]
 }
-\`\`\`
+```
 
-\`\`\`bash
+```bash
 av report start --task-id ISSUE-123 --task "Permission package clone" --risk 5 --agents 2
 av report import --task-id ISSUE-123 --file /tmp/findings.json --dry-run
 av report import --task-id ISSUE-123 --file /tmp/findings.json
-\`\`\`
+```
 
-**整批验证、一次保存：** 输入为 UTF-8 JSON，最大 1 MiB、最多 300 条 Finding/Fix/Event 合计。先验证 schema、字段、枚举、引用；发现错误则不修改归档。支持用 \`"key"\` 为同批新问题命名，再用 Fix 的 \`"ref"\` 指向它；也支持通过现有问题 \`"id":"F001"\` 定向更新。后者的 Fix 使用 \`"id":"F001"\`，且 \`id\` 与 \`ref\` 不可同时给出。
+**整批验证、一次保存：** 输入为 UTF-8 JSON，最大 1 MiB、最多 300 条 Finding/Fix/Event 合计。先验证 schema、字段、枚举、引用；发现错误则不修改归档。支持用 `"key"` 为同批新问题命名，再用 Fix 的 `"ref"` 指向它；也支持通过现有问题 `"id":"F001"` 定向更新。后者的 Fix 使用 `"id":"F001"`，且 `id` 与 `ref` 不可同时给出。
 
-重复导入**同一字节内容**到同一审查轮次将跳过重复写入；下一轮重新发现已修复问题会保持同一个 F### 并重新打开。即使提交了同名问题，也不会创建新的平行报告。多次导入修改过的内容不一定幂等，应使用稳定问题 ID，并检查返回的 \`finding_ids\`。
+重复导入**同一字节内容**到同一审查轮次将跳过重复写入；下一轮重新发现已修复问题会保持同一个 F### 并重新打开。即使提交了同名问题，也不会创建新的平行报告。多次导入修改过的内容不一定幂等，应使用稳定问题 ID，并检查返回的 `finding_ids`。
 
-\`--dry-run\` 仅校验并预演，不写入 JSON/HTML；正式导入成功后，CLI 返回记录的 ID、轮次和实际报告路径。CLI 把 \`finding\`、\`fix\` 和 \`event\` 归入同一个活动轮次；先运行 \`start\`，不要在 \`finish\` 后直接追加。
+`--dry-run` 仅校验并预演，不写入 JSON/HTML；正式导入成功后，CLI 返回记录的 ID、轮次和实际报告路径。CLI 把 `finding`、`fix` 和 `event` 归入同一个活动轮次；先运行 `start`，不要在 `finish` 后直接追加。
 
-**审查者不可仅因有修复 Proposal 就填写 \`fixes\`。** 只有实现者完成实际修改、复核后才记录真实 Fix。批量导入同时包含新问题和修复时，亦遵循此原则。
+**审查者不可仅因有修复 Proposal 就填写 `fixes`。** 只有实现者完成实际修改、复核后才记录真实 Fix。批量导入同时包含新问题和修复时，亦遵循此原则。
 
-## 4. CLI / 写入异常：不得阻碍开发与交付
+## 4. 待用户确认与反馈（Decisions）
+
+**D### 是待确认事项，F### 是已确认缺陷。** 需求缺口、业务规则歧义、方案取舍及用户反馈应单独记录为决策，不计入 Bug 和修复统计。只有当前已授权需求确实依赖该决策时才设置 blocking；独立的新需求建议不能阻塞正常交付。
+
+### 4.1 新增待确认事项
+
+```bash
+av report decision add --task-id ISSUE-123 \
+  --kind requirement-gap \
+  --title "停用权限包是否允许克隆？" \
+  --context "权限包克隆" \
+  --scenario "源权限包已停用" \
+  --evidence "需求及已有业务契约没有明确这项规则" \
+  --question "该场景是否允许克隆？" \
+  --options-json '[{"id":"A","text":"允许"},{"id":"B","text":"拒绝","tradeoff":"需要用户提示"}]' \
+  --recommendation "先确认停用状态的业务语义"
+```
+
+参数：--task-id 与 --title 必填；--kind 选择 requirement-gap（默认）、ambiguity、tradeoff、feedback。--context / --scenario / --evidence / --question / --recommendation 分别记录背景、触发条件、审查依据、提问与建议。--options-json 是 0–8 个选项（id、text、可选 tradeoff）的 JSON 数组。不具备候选方案时无需编造。--blocking 仅表示当前需求确实因缺少决策而受阻；--linked-finding F001 可关联现有缺陷；--id D001 更新仍处于 pending 的事项。相同标题和类型默认复用同一 D###，已关闭事项不得静默重新打开。
+
+### 4.2 用户确认后写入结论
+
+```bash
+av report decision resolve --task-id ISSUE-123 \
+  --id D001 \
+  --answer "选择 B，停用的权限包禁止克隆" \
+  --source "用户在本次需求会话中明确确认"
+```
+
+--id、--answer、--source 必需。--source 应记录实际可核对的**用户确认来源**；CLI 只校验非空，不能替代 Agent 判断是否真正得到授权。--status deferred 可记录经明确同意的暂缓决定。所有决策保留确认时间、轮次和来源；只有明确确认后，未定义的新规则才能正式加入开发与验收测试。
+
+### 4.3 离线报告快捷复制
+
+「待你确认」区在「审查结论」之后，包含「复制问题，交给 AI 讨论」「复制完整上下文」「复制全部待确认事项」。复制 Markdown 含任务背景、问题、方案和**未确认不得实施**的指令，便于用户与 AI 讨论；不联网、不向任何模型发送消息。浏览器自动复制受限时提供手动复制窗口。纯 HTML 不能直接修改本地 JSON，用户确认后由主 Agent 执行 decision resolve。旧报告缺失 decisions 数组也能显示。
+
+### 4.4 批量导入 Decision
+
+继续使用 adversarial-verification-import/v1；一次导入可包含 findings、fixes、events、decisions、resolutions，沿用整批预检与原子写入。
+
+```json
+{
+  "schema": "adversarial-verification-import/v1",
+  "decisions": [
+    {
+      "key": "disabled-source",
+      "title": "停用权限包是否允许克隆？",
+      "kind": "requirement-gap",
+      "context": "权限包克隆",
+      "blocking": false,
+      "question": "是否允许克隆？",
+      "options": [
+        {"id": "A", "text": "允许"},
+        {"id": "B", "text": "拒绝", "tradeoff": "需要提示"}
+      ]
+    }
+  ]
+}
+```
+
+只有**已经获得实际确认**才写入 resolutions：
+
+```json
+{
+  "schema": "adversarial-verification-import/v1",
+  "resolutions": [
+    {
+      "id": "D001",
+      "answer": "拒绝克隆",
+      "source": "用户在需求评审中确认",
+      "status": "resolved"
+    }
+  ]
+}
+```
+
+当一个批次同时创建并确认同一事项时，可使用 decisions[].key + resolutions[].ref 引用，不必猜测 ID。不能为了将报告显示 READY 而自行补写确认结果。
+
+## 5. CLI / 写入异常：不得阻碍开发与交付
 
 按以下优先级降级，**不进行无界重试或临时重写报告系统**：
 
-1. 一次 CLI 失败时记录简短原因；如果只是 \`av\` 找不到，尝试一次 \`python3 /path/to/skill/scripts/av.py report ...\` 或原脚本 \`review_report.py\`。
-2. 若 CLI、模板或 HTML 写入异常，但**已有任务 JSON 可以安全访问**，可以直接按照下面的字段示例编辑**同一文件**，原始记录不能删除或整体替换。保存前使用临时文件 + \`os.replace\` 的原子写法，并保持 Git 排除。
+1. 一次 CLI 失败时记录简短原因；如果只是 `av` 找不到，尝试一次 `python3 /path/to/skill/scripts/av.py report ...` 或原脚本 `review_report.py`。
+2. 若 CLI、模板或 HTML 写入异常，但**已有任务 JSON 可以安全访问**，可以直接按照下面的字段示例编辑**同一文件**，原始记录不能删除或整体替换。保存前使用临时文件 + `os.replace` 的原子写法，并保持 Git 排除。
 3. 若 JSON 路径未知、不可读、已被 Git 跟踪、无法安全写入或不能验证格式，**不要另建多个零散的报告目录**。直接在给用户的最终回复中列出发现、证据、Proposal、实际 Fix、测试结果和报告限制。继续正常修复、测试与交付；不能谎称报告已成功归档。
 
-人工修改**已有 JSON** 时，应保留 \`schema\`、\`identity\`、\`task_id\`、\`sessions\`、\`findings\`、已存在的问题 ID 和修复历史。新问题用递增 F###，不要产生重复 ID；同一问题后续修复追加到它的 \`repairs\`。JSON 中的必要字段结构：
+人工修改**已有 JSON** 时，应保留 `schema`、`identity`、`task_id`、`sessions`、`findings`、已存在的问题 ID 和修复历史。新问题用递增 F###，不要产生重复 ID；同一问题后续修复追加到它的 `repairs`。JSON 中的必要字段结构：
 
-\`\`\`json
+```json
 {
   "schema": "adversarial-verification-report/v1",
   "identity": "id:issue-123",
@@ -158,7 +236,7 @@ av report import --task-id ISSUE-123 --file /tmp/findings.json
     }
   ]
 }
-\`\`\`
+```
 
 这个 JSON 仅用于**理解当前结构**，不能拿它覆盖已有报告，否则会丢失历史记录。不要凭空补齐时间、Token、问题证据和实际测试结果。
 
@@ -166,7 +244,7 @@ av report import --task-id ISSUE-123 --file /tmp/findings.json
 
 当 AI 已在已有报告的原始 JSON 中修改了所需字段，可以用 Python 标准库保证单文件原子替换：
 
-\`\`\`python
+```python
 from pathlib import Path
 import json, os, tempfile
 
@@ -204,14 +282,14 @@ try:
     os.replace(temp, report)
 finally:
     temp.unlink(missing_ok=True)
-\`\`\`
+```
 
-**注意：** 如果仅直接更新 JSON，HTML 不会自动刷新。CLI 恢复后可以对同一 \`--task-id\` 执行 \`av report render\`，重新生成 HTML；若命令仍异常，报告 HTML 可能落后，必须告知用户，不能声称它已同步。
+**注意：** 如果仅直接更新 JSON，HTML 不会自动刷新。CLI 恢复后可以对同一 `--task-id` 执行 `av report render`，重新生成 HTML；若命令仍异常，报告 HTML 可能落后，必须告知用户，不能声称它已同步。
 
-仅允许向**已有且安全的同任务归档**执行这种手动编辑。不要覆盖 Git-tracked 文件，不要为了写报告改变项目源代码/测试、降低 Review 标准，或让报告异常变成 \`CHANGES_NEEDED\` / \`PARTIAL\` 的原因。真正的代码证据不足仍需要如实反映在 Review 结论里。
+仅允许向**已有且安全的同任务归档**执行这种手动编辑。不要覆盖 Git-tracked 文件，不要为了写报告改变项目源代码/测试、降低 Review 标准，或让报告异常变成 `CHANGES_NEEDED` / `PARTIAL` 的原因。真正的代码证据不足仍需要如实反映在 Review 结论里。
 
-## 5. 推荐给 Agent 的操作原则
+## 6. 推荐给 Agent 的操作原则
 
-**Reviewer：** 多问题优先批量 \`import --file\`；只写发现和 Proposal。**Implementer：** 完成真实 Fix 后补充 Fix、复核和必要事件。**Parent：** 使用同一需求 ID 汇总、结束并向用户提供结果。出现工具错误时一次降级即可，**继续主任务**；用户能够知道结果比修复一个报告工具更重要。
+**Reviewer：** 多问题优先批量 `import --file`；只写发现和 Proposal。**Implementer：** 完成真实 Fix 后补充 Fix、复核和必要事件。**Parent：** 使用同一需求 ID 汇总、结束并向用户提供结果。出现工具错误时一次降级即可，**继续主任务**；用户能够知道结果比修复一个报告工具更重要。
 
 后台更新检测只是 CLI 的附属能力，与报告写入是否成功无关；GitHub 网络不可用也不能成为暂停开发的理由。

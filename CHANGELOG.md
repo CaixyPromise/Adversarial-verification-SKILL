@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.4 — 2026-11-02
+
+- Add separate D### decisions/feedback with pending/resolved/deferred states, options, optional blocking flags, linked findings and explicit user confirmation sources.
+- Add offline HTML decision cards with copy-question, copy-context and copy-all-pending actions and a manual clipboard fallback.
+- Extend atomic batch imports with decisions/resolutions while keeping legacy reports and defect counts compatible.
+
 ## 0.3.3 — 2026-11-02
 
 - Review test cases for meaningful black-box assertions, negative/failure paths and complex multi-step business flows; do not accept happy-path-only tests for exposed material risks.

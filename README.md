@@ -72,6 +72,10 @@ If the launcher directory is not on `PATH`, call `python3 /path/to/skill/scripts
 
 **Artifact purity:** avoid final UI copy, filenames or unnecessary mechanisms that merely narrate rejected AI-user discussion alternatives. Preserve genuine compatibility, security and audit requirements.
 
+## User decisions & feedback
+
+Review can record new proposed business rules independently of confirmed defects, using D### decision items. The offline HTML offers Copy question, Copy full context, and Copy all pending to discuss decisions with an AI. User confirmation must precede adoption of new requirements; the answer and source can be recorded via `av report decision resolve`. See [CLI usage](references/cli-usage.md).
+
 ## Files
 
 - `SKILL.md` — authoritative workflow and 0–3 agent allocation.
