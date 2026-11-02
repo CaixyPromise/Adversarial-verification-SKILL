@@ -1,6 +1,6 @@
 # Review Playbook — Role-guided Engineering Review
 
-Use only role sections and probes relevant to the change. These are **reasoning techniques**, not a ritual checklist. The risk score, 0–3 agent budget and stop criteria live in `SKILL.md`. Use `references/project-conventions.md` for project-aware review; apply `references/engineering-quality.md`, `references/code-structure-governance.md`, `references/data-access-practices.md`, `references/frontend-experience.md` and `references/behavioral-testing.md` **only when relevant**.
+Use only role sections and probes relevant to the change. These are **reasoning techniques**, not a ritual checklist. The risk score, 0–3 agent budget and stop criteria live in `SKILL.md`. Use `references/project-conventions.md` for project-aware review; apply `references/engineering-quality.md`, `references/code-structure-governance.md`, `references/data-access-practices.md`, `references/frontend-experience.md`, `references/behavioral-testing.md` and `references/failure-attribution.md` **only when relevant**.
 
 ## Common method for every verifier
 
@@ -65,12 +65,13 @@ An optional refactor must not silently expand the user's requested change. Repor
 **Question:** Could the change fail under real workloads, hostile access, historical system constraints or distributed execution?
 
 - Identify the relevant **trust, process, network, persistence and deployment boundaries**. Focus on what this change actually touches.
+- **Attribution:** before fixing a failing test, distinguish a project-owned misuse/integration regression from upstream browser/library defects, environment or CI setup, and unknown causes. Check versions/contracts and bounded diagnostics; never reflexively install another browser or driver. See `references/failure-attribution.md`.
 - **Security:** identity origin, authorization/ownership enforcement, untrusted input, secrets and failure-denial semantics; hidden UI controls are not server authorization.
 - **Performance & resources:** critical paths, query shape/N+1, repeated expensive work, allocations, caches, connections, event listeners, worker cleanup and input growth.
 - **Concurrency & distributed systems when relevant:** atomicity, duplicate delivery, idempotency, ordering, locks, races, retries/timeouts, partial failures, compensation, restart recovery, backpressure and eventual consistency guarantees.
 - **Historical maintainability & compatibility:** prior incidents or known fragile paths when accessible, legacy callers, schema/version upgrades, rolling deployments, configuration drift, logging/metrics, observability and rollback.
 - Choose **one or more high-signal probes** only for material risks: an unauthorized access, a duplicate concurrent mutation, a failed dependency, an old-data migration, a realistic workload comparison, or a restart/reconnect scenario.
-- Separate measured effects from plausible hypotheses; do not invent scalability, distributed or security concerns when not relevant.
+- Separate measured effects from plausible hypotheses; do not invent scalability, distributed or security concerns when not relevant. State attribution confidence and disclose blocked external verification rather than guessing fault ownership.
 
 **Deliver:** concrete failure modes, triggering conditions, estimated impact and scope, directly observed or code-backed evidence, residual untested risks.
 

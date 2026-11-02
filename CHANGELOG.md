@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.5 — 2026-11-02
+
+- Add optional failure-attribution reference for distinguishing project defects, third-party browser/library limitations, environment/CI issues and unknown causes.
+- Bound diagnostic effort and prohibit unapproved alternative-browser downloads, environment changes and excessive trace/disk generation just to obtain green tests.
+- Require evidence-backed attribution and escalate only supported integration mitigations or new compatibility policies for user approval.
+
 ## 0.3.4 — 2026-11-02
 
 - Add separate D### decisions/feedback with pending/resolved/deferred states, options, optional blocking flags, linked findings and explicit user confirmation sources.

@@ -68,6 +68,8 @@ Property-based tests, targeted mutation tests, fuzzing, contract tests and failu
 
 **Security:** Where does trust cross a process/user/tenant boundary? Is authorization enforced at the trusted server/service boundary, not only the UI? Prefer project-approved controls and libraries; never invent a universal security rule when the contract and threat model matter.
 
+**Failure attribution:** Is the actual fault ours (including incorrect upstream API usage), an environment/CI problem, an independently supported upstream limitation, or still unknown? Do not manufacture compatibility logic or download another runtime to mask an unresolved failure. See `failure-attribution.md`.
+
 **Operations:** If this breaks after rollout, how will it be detected, diagnosed, contained and rolled back? Do old/new versions and existing data coexist safely? Select observability signals that correspond to real failure modes; do not demand new infrastructure for a cosmetic change.
 
 ## Findings, severity and stopping

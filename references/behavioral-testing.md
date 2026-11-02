@@ -24,6 +24,8 @@ Black-box is a perspective, **not a command to create expensive browser E2E test
 
 **Illustrative multi-step scenario:** actor enters context → authorization → create/update → persistence → external notification → read-back. Verify the final state and any necessary invariant at each critical seam. Repeat the *highest-risk divergent route*, such as a foreign actor, timeout after persistence or duplicate submission, **only if the business semantics are already established**. This example illustrates how to test a chain; it is not a new product requirement.
 
+If a test fails in Playwright, a browser, another dependency or CI, first apply `failure-attribution.md`: the failure is not by itself proof of a project regression. Inspect existing versions and evidence; do not silently install browsers or weaken assertions.
+
 Use the smallest reliable scenario set that exposes **distinct material risks**. Do not construct an exhaustive Cartesian product, duplicate every test at every layer or make routine changes wait for flaky/expensive full-system suites.
 
 ## 3. Audit tests as first-class review targets

@@ -29,7 +29,7 @@ A third verifier is also allowed for a 4–5 score when a distinct material risk
 
 - **A — Requirement correctness:** independently derive acceptance criteria and business invariants; review tests for black-box behavior, meaningful negative paths and multi-step business scenarios beyond happy paths. Ask user approval before turning unspecified new product rules into code or acceptance tests.
 - **B — Implementation consistency:** search progressively (changed module → direct dependencies → relevant shared code → selective history), compare existing business semantics and file/module cohesion, coupling, fragmentation and stable names where relevant, and prefer existing reuse or module-local extraction. A shared utility package is appropriate only when stable cross-module technical behavior recurs; shared business rules belong in domain services/policies. **Never abstract merely because code looks similar.**
-- **C — System engineering:** assess applicable performance, security, long-term maintenance, system compatibility and distributed failure/concurrency risks using targeted probes.
+- **C — System engineering:** assess performance, security, compatibility, distributed risks and failure ownership. Distinguish project defects from upstream/browser/library and environment failures; avoid unapproved downloads or speculative workarounds.
 
 With **one** reviewer, cover all three lenses in proportion to risk. With **two**, default to A and combined B+C (or split differently for the dominant risk); parent checks gaps. With **three**, assign A/B/C separately. Role-specific investigation guidance is in `references/review-playbook.md`. No role is a reason to demand refactoring purely for reuse.
 
@@ -81,6 +81,7 @@ Review can record new proposed business rules independently of confirmed defects
 - `SKILL.md` — authoritative workflow and 0–3 agent allocation.
 - `references/review-playbook.md` — role-specific investigation methods and optional engineering probes.
 - `references/behavioral-testing.md` — black-box/complex business-chain test review and explicit approval for new product rules.
+- `references/failure-attribution.md` — evidence-based root-cause ownership for upstream browsers/libraries, project integrations and CI environments, with bounded diagnostics.
 - `references/engineering-quality.md` — evidence-based engineering-quality principles.
 - `references/project-conventions.md` — applicable repository/agent instructions, language and toolchain constraints.
 - `references/code-structure-governance.md` — responsibility-based file splitting/consolidation, directory cohesion, change locality, durable names and safe refactoring checks.
