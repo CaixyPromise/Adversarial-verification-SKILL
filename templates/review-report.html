@@ -14,7 +14,7 @@
     .subtitle{color:#6c7a8f;font-size:13px;line-height:1.6}.actions{display:flex;gap:8px;flex-wrap:wrap}
     button{cursor:pointer;padding:10px 13px;border:1px solid #dbe1e8;background:#fff;border-radius:10px;color:#33445c;font-size:13px;font-weight:650}
     button:hover{border-color:#9eacbd;background:#f9fafc}
-    .metrics{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin:22px 0 25px}
+    .metrics{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;margin:22px 0 25px}
     .metric,.panel{background:#fff;border:1px solid #e4e9f1;border-radius:16px;box-shadow:0 2px 10px rgba(24,46,75,.025)}
     .metric{padding:19px 18px;min-height:110px}.metric .value{font-size:26px;font-weight:750;letter-spacing:-.045em;margin:7px 0 6px}
     .metric .note{font-size:11px;line-height:1.5;color:#8190a2}
@@ -36,6 +36,14 @@
     .block label{display:block;color:#728096;font-size:11px;letter-spacing:.07em;text-transform:uppercase;font-weight:750;margin:0 0 8px}
     .block p{margin:0;color:#394a60;font-size:13px;line-height:1.7;white-space:pre-wrap;overflow-wrap:anywhere}
     .full{grid-column:1/-1}.repair{border-left:3px solid #b3c8e6;padding-left:12px;margin:10px 0}
+    .decisions{display:grid;gap:12px}.decision{border:1px solid #e1e8f0;border-radius:14px;padding:20px;background:#fff}
+    .decision.pending{border-left:4px solid #c98b3a}.decision.resolved{border-left:4px solid #38946c}.decision.deferred{border-left:4px solid #8995a6}
+    .decision-head{display:flex;align-items:start;justify-content:space-between;gap:12px}.decision-title{font-weight:730;font-size:15px;line-height:1.55}
+    .decision-desc{font-size:13px;line-height:1.65;color:#55667b;white-space:pre-wrap;margin:8px 0 0}
+    .decision-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+    .decision-options{padding-left:18px;margin:7px 0 0;color:#42546a;font-size:13px;line-height:1.7}
+    .decision-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+    .decision-actions button.primary{background:#263f61;color:white;border-color:#263f61}.decision-actions button.primary:hover{background:#1e3553}
     .rounds{display:grid;gap:11px}.round{border:1px solid #e3e9f0;background:#fff;border-radius:12px;padding:16px 18px}
     .roundhead{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
     .roundmeta{color:#748297;font-size:12px;margin-top:8px;line-height:1.8}.events{margin-top:12px;border-top:1px solid #e8edf3;padding-top:10px}
@@ -43,8 +51,8 @@
     .muted{color:#8793a6}.empty{text-align:center;background:#fff;padding:32px;color:#718096;border:1px dashed #d4dce7;border-radius:12px}
     .footer{font-size:12px;color:#8390a2;margin-top:30px;line-height:1.7}
     @media(max-width:850px){.metrics{grid-template-columns:repeat(2,1fr)}.overview{grid-template-columns:1fr}.heading{display:block}.actions{margin-top:17px}}
-    @media(max-width:560px){.shell{padding:25px 13px 60px}.metrics{gap:8px}.metric{min-height:96px;padding:13px}.metric .value{font-size:22px}.detail{grid-template-columns:1fr}.full{grid-column:auto}}
-    @media print{body{background:#fff}.shell{max-width:none;padding:0}.actions,.toolbar{display:none}.metric,.panel,details,.round{box-shadow:none;break-inside:avoid}details .detail{display:grid!important}details:not([open]) .detail{display:grid!important}.chevron{display:none}}
+    @media(max-width:560px){.shell{padding:25px 13px 60px}.metrics{gap:8px}.metric{min-height:96px;padding:13px}.metric .value{font-size:22px}.detail,.decision-grid{grid-template-columns:1fr}.full{grid-column:auto}}
+    @media print{body{background:#fff}.shell{max-width:none;padding:0}.actions,.toolbar,.decision-actions{display:none}.metric,.panel,details,.round{box-shadow:none;break-inside:avoid}details .detail{display:grid!important}details:not([open]) .detail{display:grid!important}.chevron{display:none}}
   </style>
 </head>
 <body>
@@ -56,6 +64,9 @@
   </div>
   <div class="metrics" id="metrics"></div>
   <section class="section"><div class="section-head"><h2>审查结论</h2></div><div class="panel overview" id="overview"></div></section>
+  <section class="section"><div class="section-head"><h2>待你确认</h2><div class="actions"><span class="section-count" id="decisionCount"></span><button id="copyAllDecisions" type="button">复制全部待确认事项</button></div></div>
+    <div id="decisions" class="decisions"></div>
+  </section>
   <section class="section"><div class="section-head"><h2>问题与修复跟踪</h2><span class="section-count" id="findingCount"></span></div>
     <div class="toolbar"><input id="search" type="search" placeholder="搜索问题、证据、方案或修复记录" aria-label="搜索问题"><select id="severity" aria-label="严重程度"><option value="">全部严重程度</option></select><select id="status" aria-label="处理状态"><option value="">全部状态</option></select><select id="attribution" aria-label="变更归因"><option value="">全部变更归因</option></select></div>
     <div id="findings" class="findings"></div>
@@ -72,14 +83,15 @@ const txt=v=>v===null||v===undefined||v===""?"—":String(v);
 const fmtDate=v=>{if(!v)return "—";const d=new Date(v);return isNaN(d)?"—":d.toLocaleString("zh-CN",{hour12:false})};
 const fmtDur=(a,b)=>{if(!a||!b)return null;let n=Math.max(0,Math.round((new Date(b)-new Date(a))/1000));if(!Number.isFinite(n))return null;return n>=3600?Math.floor(n/3600)+"h "+Math.floor(n%3600/60)+"m":n>=60?Math.floor(n/60)+"m "+n%60+"s":n+"s"};
 const badge=(v,klass)=>'<span class="pill '+safe(klass||v||"")+'">'+safe(txt(v))+'</span>';
-const lang={open:"待处理",fixed:"已修复",verified:"已复核",wontfix:"不修复", "needs-decision":"待决策", introduced:"本次引入",worsened:"本次加剧","pre-existing":"历史已有",unknown:"归因未定",critical:"严重",high:"高",medium:"中",low:"低",info:"提示"};
-const findings=data.findings||[],rounds=data.sessions||[];
+const lang={pending:"待确认",resolved:"已确认",deferred:"已暂缓","requirement-gap":"需求缺口",ambiguity:"规则歧义",tradeoff:"方案取舍",feedback:"征求反馈",open:"待处理",fixed:"已修复",verified:"已复核",wontfix:"不修复", "needs-decision":"待决策", introduced:"本次引入",worsened:"本次加剧","pre-existing":"历史已有",unknown:"归因未定",critical:"严重",high:"高",medium:"中",low:"低",info:"提示"};
+const findings=data.findings||[],decisions=data.decisions||[],rounds=data.sessions||[];
 const latest=rounds.length?rounds[rounds.length-1]:{};
 $("taskTitle").textContent=data.task||"未命名任务";
 $("taskMeta").textContent="归档标识："+data.identity+"  ·  创建："+fmtDate(data.created_at)+"  ·  更新："+fmtDate(data.updated_at);
 function metric(label,value,note){return '<div class="metric"><div class="eyebrow">'+safe(label)+'</div><div class="value">'+safe(txt(value))+'</div><div class="note">'+safe(note||"")+'</div></div>'}
 const resolved=findings.filter(f=>f.status==="fixed"||f.status==="verified").length;
 const pending=findings.filter(f=>f.status==="open"||f.status==="needs-decision").length;
+const pendingDecisions=decisions.filter(d=>d.status==="pending");
 const durations=rounds.map(s=>s.started_at&&s.ended_at?Math.max(0,(new Date(s.ended_at)-new Date(s.started_at))/1000):null);
 const measured=durations.filter(x=>x!==null&&Number.isFinite(x));
 const seconds=measured.reduce((a,b)=>a+b,0);
@@ -88,7 +100,8 @@ const tokens=rounds.filter(s=>s.input_tokens!==null&&s.input_tokens!==undefined&
 const sumTokens=tokens.reduce((n,s)=>n+s.input_tokens+s.output_tokens,0);
 $("metrics").innerHTML=
  metric("最新结论",txt(latest.assessment),latest.ended_at?"已结束第 "+latest.round+" 轮":"本轮进行中")+
- metric("累计问题",findings.length,"去重后的独立问题")+
+ metric("累计问题",findings.length,"去重后的独立缺陷")+ 
+ metric("待用户确认",pendingDecisions.length,"与缺陷数量分别统计")+
  metric("已修复 / 待处理",resolved+" / "+pending,"含已复核及待决策")+
  metric("记录审查耗时",duration,measured.length+"/"+rounds.length+" 轮提供起止时间")+
  metric("Token 消耗",tokens.length?sumTokens.toLocaleString():"—",tokens.length?tokens.length+"/"+rounds.length+" 轮有完整输入/输出记录":"未获得可信用量数据");
@@ -98,6 +111,76 @@ const options=(id,values)=>{for(const v of values){const o=document.createElemen
 options("severity",["critical","high","medium","low","info"]);
 options("status",["open","fixed","verified","wontfix","needs-decision"]);
 options("attribution",["introduced","worsened","pre-existing","unknown"]);
+function decisionMarkdown(d,full){
+ const options=(d.options||[]).map(o=>"- "+o.id+"："+o.text+(o.tradeoff?"（取舍："+o.tradeoff+"）":"")).join("\n");
+ const parts=["【待确认事项 "+d.id+"】","需求："+txt(data.task),"标题："+txt(d.title),
+   "类型："+(lang[d.kind]||d.kind),
+   "问题："+txt(d.question||d.title)];
+ if(full){
+   parts.push("背景："+txt(d.context),"触发场景："+txt(d.scenario),
+              "审查证据："+txt(d.evidence));
+ }
+ if(options)parts.push("候选方案：\n"+options);
+ if(d.recommendation)parts.push("审查建议："+d.recommendation);
+ if(full)parts.push("是否阻塞当前交付："+(d.blocking?"是":"否"),
+                    "相关问题："+((d.linked_findings||[]).join(", ")||"无"));
+ parts.push("请帮助我理解该问题并比较可选方案。只有经我明确确认的新业务规则才能进入正式需求、验收测试与实施；在我确认前请勿直接修改代码或假定已选定某方案。");
+ return parts.join("\n\n");
+}
+function renderDecisions(){
+ $("decisionCount").textContent=pendingDecisions.length+" 项待确认";
+ $("copyAllDecisions").disabled=pendingDecisions.length===0;
+ if(!decisions.length){
+   $("decisions").innerHTML='<div class="empty">当前没有需要确认的业务事项</div>';
+   return;
+ }
+ const sorted=[...decisions].sort((a,b)=>(a.status==="pending"?0:1)-(b.status==="pending"?0:1));
+ $("decisions").innerHTML=sorted.map(d=>{
+   const choices=(d.options||[]).map(o=>'<li><strong>'+safe(o.id)+'</strong> · '+safe(o.text)+(o.tradeoff?' <span class="muted">('+safe(o.tradeoff)+')</span>':'')+'</li>').join("");
+   const resolution=d.resolution;
+   const response=resolution?'<div class="block full"><label>确认/暂缓结果</label><p>'+safe(resolution.answer)+'\n确认来源：'+safe(resolution.source)+' · '+safe(fmtDate(resolution.at))+'</p></div>':"";
+   const controls=d.status==="pending"?'<div class="decision-actions"><button class="primary" data-copy="question" data-id="'+safe(d.id)+'" type="button">复制问题，交给 AI 讨论</button><button data-copy="context" data-id="'+safe(d.id)+'" type="button">复制完整上下文</button></div>':"";
+   return '<article class="decision '+safe(d.status)+'"><div class="decision-head"><div><div class="decision-title">'+safe(d.id+" · "+d.title)+'</div><div class="pills">'+badge(lang[d.kind]||d.kind)+badge(lang[d.status]||d.status,d.status)+(d.blocking?badge("阻塞当前交付"):"")+'</div></div></div>'+
+      '<p class="decision-desc">'+safe(txt(d.question||d.title))+'</p>'+
+      '<div class="decision-grid">'+block("业务背景",d.context)+block("触发场景",d.scenario)+block("审查依据",d.evidence)+block("建议",d.recommendation)+
+      (choices?'<div class="block full"><label>可选方案与取舍</label><ol class="decision-options">'+choices+'</ol></div>':"")+response+'</div>'+controls+'</article>';
+ }).join("");
+}
+async function copyContent(value,trigger){
+ let copied=false;
+ try {
+   if(navigator.clipboard&&navigator.clipboard.writeText){
+     await navigator.clipboard.writeText(value);copied=true;
+   }
+ }catch(e){}
+ if(!copied){
+   const field=document.createElement("textarea");
+   field.value=value;field.setAttribute("readonly","");
+   field.style.position="fixed";field.style.left="-9999px";
+   document.body.appendChild(field);field.select();
+   try{copied=!!document.execCommand("copy")}catch(e){}
+   field.remove();
+ }
+ if(copied){
+   const old=trigger.textContent;trigger.textContent="已复制";
+   setTimeout(()=>{trigger.textContent=old},1500);
+ }else{
+   window.prompt("无法自动复制，请手动复制以下内容：",value);
+ }
+}
+$("decisions").addEventListener("click",e=>{
+ const button=e.target.closest("button[data-copy]");
+ if(!button)return;
+ const item=decisions.find(d=>d.id===button.dataset.id);
+ if(!item||item.status!=="pending")return;
+ copyContent(decisionMarkdown(item,button.dataset.copy==="context"),button);
+});
+$("copyAllDecisions").addEventListener("click",e=>{
+ if(!pendingDecisions.length)return;
+ copyContent(pendingDecisions.map(d=>decisionMarkdown(d,true)).join("\n\n---\n\n"),e.currentTarget);
+});
+renderDecisions();
+
 const block=(label,value,extra)=>'<div class="block '+(extra||"")+'"><label>'+safe(label)+'</label><p>'+safe(txt(value))+'</p></div>';
 function renderFindings(){
  const q=$("search").value.toLowerCase(),severity=$("severity").value,status=$("status").value,attribution=$("attribution").value;
