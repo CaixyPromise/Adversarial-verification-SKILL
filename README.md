@@ -27,7 +27,7 @@ A third verifier is also allowed for a 4–5 score when a distinct material risk
 
 ### Reviewer roles and how they review
 
-- **A — Requirement correctness:** independently derive acceptance criteria and business invariants, trace the full intended journey and find semantic mistakes or missing scenarios.
+- **A — Requirement correctness:** independently derive acceptance criteria and business invariants; review tests for black-box behavior, meaningful negative paths and multi-step business scenarios beyond happy paths. Ask user approval before turning unspecified new product rules into code or acceptance tests.
 - **B — Implementation consistency:** search progressively (changed module → direct dependencies → relevant shared code → selective history), compare existing business semantics and file/module cohesion, coupling, fragmentation and stable names where relevant, and prefer existing reuse or module-local extraction. A shared utility package is appropriate only when stable cross-module technical behavior recurs; shared business rules belong in domain services/policies. **Never abstract merely because code looks similar.**
 - **C — System engineering:** assess applicable performance, security, long-term maintenance, system compatibility and distributed failure/concurrency risks using targeted probes.
 
@@ -76,6 +76,7 @@ If the launcher directory is not on `PATH`, call `python3 /path/to/skill/scripts
 
 - `SKILL.md` — authoritative workflow and 0–3 agent allocation.
 - `references/review-playbook.md` — role-specific investigation methods and optional engineering probes.
+- `references/behavioral-testing.md` — black-box/complex business-chain test review and explicit approval for new product rules.
 - `references/engineering-quality.md` — evidence-based engineering-quality principles.
 - `references/project-conventions.md` — applicable repository/agent instructions, language and toolchain constraints.
 - `references/code-structure-governance.md` — responsibility-based file splitting/consolidation, directory cohesion, change locality, durable names and safe refactoring checks.

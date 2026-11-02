@@ -49,12 +49,14 @@ Compare current code first, then directly related callers, then shared libraries
 
 ## Test quality: verify the guardrail, not just a green build
 
-For material changes, identify the highest-risk behavior and one test or focused probe able to catch its failure:
+For material changes, review the **tests themselves** for actual observable business outcomes—not only pass/fail or coverage. Prefer stable public/black-box contract assertions and risk-relevant multi-step journeys. Identify the highest-risk behavior and a focused test/probe that could catch its failure:
 
 - **Wrong positive result:** test should detect false success, unauthorized access or wrong output, not just a 200/zero exit code.
-- **Failure behavior:** test a representative invalid state, missing dependency, partial failure, or repeated action *when relevant*.
+- **Failure behavior:** go beyond happy paths: test a representative unauthorized/invalid state, missing dependency, partial failure or repeated action *when relevant*.
 - **Regression boundary:** test a caller/consumer or invariant affected by the change, not only the implementation method.
 - **Test cost:** prefer focused deterministic tests; avoid duplicating the whole test suite or adding fragile fixtures solely to demonstrate review activity.
+
+Derive expected results from *approved requirements* and established contracts. If a reviewer discovers a plausible but unspecified new product policy, propose it and obtain explicit user approval before encoding it as an acceptance test or implementation. See `behavioral-testing.md`.
 
 Property-based tests, targeted mutation tests, fuzzing, contract tests and failure injection are **optional escalation techniques**, selected when their risk-reduction value is credible. Never treat coverage percentages, mutation score or test count as direct proof of product quality.
 

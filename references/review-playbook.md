@@ -1,12 +1,12 @@
 # Review Playbook — Role-guided Engineering Review
 
-Use only role sections and probes relevant to the change. These are **reasoning techniques**, not a ritual checklist. The risk score, 0–3 agent budget and stop criteria live in `SKILL.md`. Use `references/project-conventions.md` for project-aware review; apply `references/engineering-quality.md`, `references/code-structure-governance.md`, `references/data-access-practices.md` and `references/frontend-experience.md` **only when relevant**.
+Use only role sections and probes relevant to the change. These are **reasoning techniques**, not a ritual checklist. The risk score, 0–3 agent budget and stop criteria live in `SKILL.md`. Use `references/project-conventions.md` for project-aware review; apply `references/engineering-quality.md`, `references/code-structure-governance.md`, `references/data-access-practices.md` , `references/frontend-experience.md` and `references/behavioral-testing.md` **only when relevant**.
 
 ## Common method for every verifier
 
 1. **Derive a provisional expected behavior and critical invariants independently** from the original requirement and trusted contracts, *before treating implementation notes as persuasive evidence*. Resolve ambiguities using real product and repository evidence; do not assume old code or tests are the specification.
 2. Map the change to its **real execution/data path**, including relevant surrounding code, not just modified lines.
-3. Form the strongest realistic **failure hypothesis**; inspect or probe it using safe, high-signal evidence.
+3. Form the strongest realistic **failure hypothesis**; inspect or probe it using safe, high-signal evidence. Inspect whether real black-box contract assertions and test fixtures would catch that failure.
 4. Finish the **relevant coverage** before delivering a consolidated report. Distinguish confirmed defects, design tradeoffs and unknowns.
 5. Provide source locations, commands and observed results when actually executed. Never invent test runs, guarantees or business requirements.
 
@@ -18,8 +18,8 @@ Use only role sections and probes relevant to the change. These are **reasoning 
 - Walk **entry → authorization/validation → decision branches → state transitions → persistence/external effects → result**. Note where expected behavior may have been dropped or silently changed.
 - Extract **business invariants** (e.g., ownership checks, unique financial effects, allowed transitions) and examine paths that could violate them.
 - Probe at least the highest-risk alternative branch or failure path when applicable: invalid state, missing/duplicate input, retries, partial completion.
-- Compare tests and actual outputs to the intended semantics; ask whether a wrong implementation could still pass.
-- When a material rule admits multiple valid interpretations and evidence cannot resolve it, provide the exact **human decision required**; never quietly impose a preference.
+- Inspect the **test cases** and actual outputs against intended semantics; challenge happy-path-only fixtures, implementation-mirroring mocks and weak assertions. Select black-box negative paths and multi-step business chains for high-risk cases; check final state, side effects and invariants, not just a successful call.
+- When a material rule admits multiple valid interpretations and evidence cannot resolve it, provide the exact **human decision required**; never quietly impose a preference. Do not promote a newly imagined rule outside the approved scope into an acceptance test or implementation before the user explicitly confirms; report it as a proposal instead.
 
 **Deliver:** requirement coverage, observed behavior versus intended behavior, missing cases, violated invariants, unresolved product decisions.
 
@@ -79,7 +79,7 @@ An optional refactor must not silently expand the user's requested change. Repor
 - **Change-impact analysis:** symbol search, call/data-flow trace, API/schema diff and affected neighboring tests.
 - **Invariants/state-machine reasoning:** legal/illegal transitions, repeated actions, ownership, failure paths and side effects.
 - **Fault/concurrency probes:** controlled timeouts, retry duplicates, partial writes, cancellation and restart; avoid production side effects.
-- **Test effectiveness:** negative tests, property-based tests, a *targeted* mutation experiment or fuzzing when cost and input surface justify them. Passing tests alone do not prove that incorrect behavior would be caught.
+- **Test effectiveness:** black-box observable results, realistic fixtures, negative cases and multi-step integration scenarios when risk warrants; property-based tests, targeted mutation or fuzzing are optional. Tests must guard approved behavior, not define unapproved policy. See `references/behavioral-testing.md`.
 - **Design review:** inspect abstraction boundaries, coupling, repeated business decisions, contract stability and complexity, while avoiding speculative refactors.
 - **Operational validation:** realistic workload, controlled environment, deployment/rollback compatibility and diagnostics where relevant.
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.3 — 2026-11-02
+
+- Review test cases for meaningful black-box assertions, negative/failure paths and complex multi-step business flows; do not accept happy-path-only tests for exposed material risks.
+- Require explicit user confirmation before adopting, testing as an acceptance requirement, or implementing previously unspecified new business policy; keep established-contract defects actionable.
+- Add optional behavioral-testing review reference without new agent roles, compulsory E2E suites, or new review gates.
+
 ## 0.3.2 — 2026-11-02
 
 - Add optional atomic `av report import --file findings.json` batch ingestion for findings, fixes and review events, with whole-batch validation, stable finding references, duplicate-import protection and `--dry-run`.
