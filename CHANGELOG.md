@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.6 — 2026-11-02
+
+- Fall back to GitHub Git transport when the commit API returns HTTP 403 or 429, avoiding API rate-limit failures during explicit updates.
+- Validate the fallback main reference and commit SHA, bound its execution time, and explain recovery when Git is unavailable.
+- Add offline regression coverage for rate limits and invalid responses.
+
 ## 0.3.5 — 2026-11-02
 
 - Add optional failure-attribution reference for distinguishing project defects, third-party browser/library limitations, environment/CI issues and unknown causes.

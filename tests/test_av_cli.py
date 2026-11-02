@@ -162,3 +162,26 @@ class TestAvCLI(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestCommitFallback(unittest.TestCase):
+    def test_rate_limit_uses_git(self):
+        for status in (403, 429):
+            error = av.urllib.error.HTTPError(av.COMMITS, status, "limited", {}, None)
+            result = subprocess.CompletedProcess([], 0, "a" * 40 + "\trefs/heads/main\n", "")
+            with mock.patch.object(av, "fetch_json", side_effect=error), mock.patch.object(av.subprocess, "run", return_value=result):
+                self.assertEqual(av.resolve_commit(), "a" * 40)
+
+    def test_non_limit_error_propagates(self):
+        error = av.urllib.error.HTTPError(av.COMMITS, 404, "missing", {}, None)
+        with mock.patch.object(av, "fetch_json", side_effect=error), mock.patch.object(av.subprocess, "run") as run:
+            with self.assertRaises(av.urllib.error.HTTPError):
+                av.resolve_commit()
+            run.assert_not_called()
+
+    def test_invalid_git_reference_rejected(self):
+        error = av.urllib.error.HTTPError(av.COMMITS, 429, "limited", {}, None)
+        result = subprocess.CompletedProcess([], 0, "bad refs/heads/main", "")
+        with mock.patch.object(av, "fetch_json", side_effect=error), mock.patch.object(av.subprocess, "run", return_value=result):
+            with self.assertRaises(ValueError):
+                av.resolve_commit()

@@ -244,15 +244,38 @@ def extract_archive(blob, stage):
     return manifest(stage / "skill-version.json")["version"]
 
 
+def resolve_commit():
+    """Resolve main through GitHub API, falling back to Git on rate limits."""
+    try:
+        commit = fetch_json(COMMITS).get("sha")
+    except urllib.error.HTTPError as error:
+        if error.code not in (403, 429):
+            raise
+        try:
+            result = subprocess.run(
+                ["git", "ls-remote", "https://github.com/" + REPO + ".git",
+                 "refs/heads/main"], capture_output=True, text=True,
+                timeout=20, check=True,
+            )
+        except (OSError, subprocess.SubprocessError) as fallback_error:
+            raise ValueError("GitHub API rate limited the update and Git fallback failed; "
+                             "install Git or retry after the limit resets") from fallback_error
+        rows = [line.split() for line in result.stdout.splitlines() if line.strip()]
+        if len(rows) != 1 or len(rows[0]) != 2 or rows[0][1] != "refs/heads/main":
+            raise ValueError("Invalid main reference returned by GitHub Git endpoint")
+        commit = rows[0][0]
+    if not isinstance(commit, str) or not SHA_PATTERN.fullmatch(commit):
+        raise ValueError("Invalid SHA returned by GitHub")
+    return commit
+
+
 def update(yes=False, force=False):
     if not ROOT.is_dir() or ROOT.is_symlink():
         raise ValueError("The Skill directory is not a normal local directory")
     if in_git_checkout(ROOT):
         raise ValueError("Skill resides in a Git working tree; use git pull instead")
     previous = manifest()["version"]
-    commit = fetch_json(COMMITS).get("sha")
-    if not isinstance(commit, str) or not SHA_PATTERN.fullmatch(commit):
-        raise ValueError("Invalid SHA returned by GitHub")
+    commit = resolve_commit()
     pinned = fetch_json(RAW + commit + "/skill-version.json")
     if pinned.get("repository") != REPO:
         raise ValueError("The pinned update has an unexpected repository")
