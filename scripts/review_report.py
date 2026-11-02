@@ -6,6 +6,7 @@ Python 3.9+, standard library only. No network, web server, or model-token estim
 from __future__ import annotations
 
 import argparse
+import copy
 from datetime import datetime
 import hashlib
 import json
@@ -304,11 +305,131 @@ def cmd_finish(args, data):
     return {"action": "finished_round", "round": session["round"], "assessment": args.assessment}
 
 
+
+IMPORT_SCHEMA = "adversarial-verification-import/v1"
+MAX_IMPORT_BYTES = 1024 * 1024
+MAX_IMPORT_RECORDS = 300
+
+
+def _import_field(record, field, default="", required=False):
+    value = record.get(field, default)
+    if not isinstance(value, str) or (required and not value.strip()):
+        raise ValueError("Import field '" + field + "' must be a non-empty string" if required
+                         else "Import field '" + field + "' must be a string")
+    return value
+
+
+def _import_record(record, allowed, label):
+    if not isinstance(record, dict):
+        raise ValueError("Import " + label + " must be a JSON object")
+    unexpected = set(record) - set(allowed)
+    if unexpected:
+        raise ValueError("Unknown fields in import " + label + ": " + ", ".join(sorted(unexpected)))
+
+
+def cmd_import(args, data):
+    """Validate and apply a batch to an isolated copy; caller commits only on success."""
+    current = active_session(data)
+    file = Path(args.file).expanduser()
+    with file.open("rb") as stream:
+        raw = stream.read(MAX_IMPORT_BYTES + 1)
+    if len(raw) > MAX_IMPORT_BYTES:
+        raise ValueError("Import payload exceeds 1 MiB")
+    payload = json.loads(raw.decode("utf-8-sig"))
+    if not isinstance(payload, dict) or payload.get("schema") != IMPORT_SCHEMA:
+        raise ValueError("Import requires schema: " + IMPORT_SCHEMA)
+    _import_record(payload, ("schema", "findings", "fixes", "events"), "document")
+    records = {}
+    for name in ("findings", "fixes", "events"):
+        value = payload.get(name, [])
+        if not isinstance(value, list):
+            raise ValueError("Import '" + name + "' must be an array")
+        records[name] = value
+    amount = sum(map(len, records.values()))
+    if not 0 < amount <= MAX_IMPORT_RECORDS:
+        raise ValueError("Import requires 1–300 total entries")
+
+    signature = hashlib.sha256(raw).hexdigest()
+    if signature in current.get("imports", []):
+        return data, {"action": "already_imported", "round": current["round"],
+                      "entries": amount, "finding_ids": [], "fixed_ids": []}
+
+    candidate = copy.deepcopy(data)
+    session = active_session(candidate)
+    lookup = {}
+    findings_out = []
+    fixes_out = []
+    for index, item in enumerate(records["findings"], 1):
+        _import_record(item,
+                       ("key", "id", "title", "category", "severity", "attribution",
+                        "evidence", "proposal", "reviewer"), "findings[" + str(index) + "]")
+        key = _import_field(item, "key").strip()
+        if key and key in lookup:
+            raise ValueError("Duplicate finding key in import: " + key)
+        severity = _import_field(item, "severity", "medium")
+        attribution = _import_field(item, "attribution", "unknown")
+        if severity not in SEVERITIES or attribution not in ("introduced", "worsened", "pre-existing", "unknown"):
+            raise ValueError("Invalid severity or attribution in finding " + str(index))
+        args_f = argparse.Namespace(
+            id=_import_field(item, "id") or None,
+            title=_import_field(item, "title", required=True),
+            category=_import_field(item, "category", "correctness"),
+            severity=severity,
+            attribution=attribution,
+            evidence=_import_field(item, "evidence"),
+            proposal=_import_field(item, "proposal"),
+            reviewer=_import_field(item, "reviewer")
+        )
+        outcome = cmd_finding(args_f, candidate)
+        if key:
+            lookup[key] = outcome["finding_id"]
+        findings_out.append(outcome["finding_id"])
+
+    for index, item in enumerate(records["fixes"], 1):
+        _import_record(item, ("id", "ref", "status", "description",
+                              "verification", "actor"), "fixes[" + str(index) + "]")
+        ref = _import_field(item, "ref")
+        explicit_id = _import_field(item, "id")
+        if (bool(ref) + bool(explicit_id)) != 1:
+            raise ValueError("Each fix must provide exactly one of 'id' or 'ref'")
+        target_id = lookup.get(ref) if ref else explicit_id
+        if not target_id:
+            raise ValueError("Unknown finding key in fix: " + ref)
+        status = _import_field(item, "status", "fixed")
+        verification = _import_field(item, "verification")
+        if status not in STATUSES:
+            raise ValueError("Invalid fix status: " + status)
+        if status == "verified" and not verification.strip():
+            raise ValueError("Verified fixes require a verification description")
+        outcome = cmd_fix(argparse.Namespace(
+            id=target_id, status=status,
+            description=_import_field(item, "description", required=True),
+            verification=verification,
+            actor=_import_field(item, "actor", "implementer")
+        ), candidate)
+        fixes_out.append(outcome["finding_id"])
+
+    for index, item in enumerate(records["events"], 1):
+        _import_record(item, ("kind", "text"), "events[" + str(index) + "]")
+        kind = _import_field(item, "kind", "note")
+        if kind not in ("review", "test", "fix", "decision", "note"):
+            raise ValueError("Invalid event kind: " + kind)
+        cmd_event(argparse.Namespace(kind=kind,
+                                    text=_import_field(item, "text", required=True)), candidate)
+    if not args.dry_run:
+        session.setdefault("imports", []).append(signature)
+    outcome = {"action": "validated_batch" if args.dry_run else "imported_batch",
+               "round": session["round"], "entries": amount,
+               "finding_ids": findings_out, "fixed_ids": fixes_out,
+               "event_count": len(records["events"])}
+    return candidate, outcome
+
+
 def main():
     parser = argparse.ArgumentParser(description="Manage one offline HTML/JSON report per review task")
     parser.add_argument("--project", default=".", help="Target project directory (default: current repository)")
     sub = parser.add_subparsers(dest="command", required=True)
-    for name in ("start", "finding", "fix", "event", "finish", "render", "show"):
+    for name in ("start", "finding", "fix", "event", "finish", "import", "render", "show"):
         p = sub.add_parser(name)
         p.add_argument("--task-id", help="Stable issue/requirement key; use on every run (recommended)")
         p.add_argument("--task", help="Task title; required on first start, optional later")
@@ -324,6 +445,9 @@ def main():
             p.add_argument("--evidence", default="")
             p.add_argument("--proposal", default="")
             p.add_argument("--reviewer", default="")
+        elif name == "import":
+            p.add_argument("--file", required=True, help="JSON batch payload (schema adversarial-verification-import/v1)")
+            p.add_argument("--dry-run", action="store_true", help="Validate without changing the archive")
         elif name == "fix":
             p.add_argument("--id", required=True)
             p.add_argument("--status", choices=STATUSES, default="fixed")
@@ -355,6 +479,8 @@ def main():
                 outcome = cmd_finding(args, data)
             elif args.command == "fix":
                 outcome = cmd_fix(args, data)
+            elif args.command == "import":
+                data, outcome = cmd_import(args, data)
             elif args.command == "event":
                 outcome = cmd_event(args, data)
             elif args.command == "finish":
@@ -362,7 +488,8 @@ def main():
             else:
                 outcome = {"action": args.command, "rounds": len(data["sessions"]),
                            "findings": len(data["findings"])}
-            if args.command not in ("show",):
+            if args.command not in ("show",) and not (args.command == "import" and
+                    (args.dry_run or outcome["action"] == "already_imported")):
                 store(data, path, html)
         print(json.dumps({"task_key": key, "json": str(path), "html": str(html),
                           **outcome}, ensure_ascii=False))

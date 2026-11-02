@@ -85,7 +85,8 @@ If the launcher directory is not on `PATH`, call `python3 /path/to/skill/scripts
 - `agents/openai.yaml` — skill interface metadata.
 - `scripts/av.py` and `skill-version.json` — CLI, cached GitHub update checks and explicit verified Skill updater.
 - `scripts/review_report.py` and `templates/review-report.html` — backwards-compatible offline dossier generator and static report template.
-- `references/reporting.md` — usage, archive discovery, provenance and Git safety.
+- `references/reporting.md` — underlying archive schema, discovery, provenance and Git safety.
+- `references/cli-usage.md` — CLI command usage, atomic batch import, direct JSON fallback and non-blocking reporting failures.
 
 ## Installation (Windows / macOS / Linux)
 

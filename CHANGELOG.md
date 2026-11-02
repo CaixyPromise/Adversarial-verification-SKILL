@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.2 — 2026-11-02
+
+- Add optional atomic `av report import --file findings.json` batch ingestion for findings, fixes and review events, with whole-batch validation, stable finding references, duplicate-import protection and `--dry-run`.
+- Document CLI commands and direct JSON fallback; reporting or file-write problems must not block coding, testing or Review delivery.
+
 ## 0.3.1 — 2026-11-02
 
 - Add comprehensive [INSTALL.md](INSTALL.md) for Windows PowerShell, macOS and Linux, including fresh installs, upgrades, PATH, rollback, uninstall and troubleshooting.

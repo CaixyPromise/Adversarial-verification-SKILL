@@ -91,7 +91,8 @@ av update --yes       # 明确允许非交互更新
 - `agents/openai.yaml`：Agent 展示与默认指令。
 - `scripts/av.py`、`skill-version.json`：CLI、异步版本检查缓存与显式更新。
 - `scripts/review_report.py`、`templates/review-report.html`：兼容原命令的静态报告生成脚本与模板。
-- `references/reporting.md`：命令、同任务归档复用、数据来源与 Git 安全说明。
+- `references/reporting.md`：同任务归档复用、数据来源与 Git 安全说明。
+- `references/cli-usage.md`：完整 CLI 参数与批量导入示例、异常时直接写 JSON、报告失败不阻碍开发。
 
 ## 安装与更新（支持 Windows / macOS / Linux）
 

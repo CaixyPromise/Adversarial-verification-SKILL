@@ -189,6 +189,16 @@ git -C "$HOME\.codex\skills\adversarial-verification" pull --ff-only
 
 ## 5. 报告文件与隐私
 
+Review CLI 的参数、批量导入 JSON 格式，以及 CLI 异常时如何继续开发并安全地人工归档，请参阅 [CLI 使用与故障降级](references/cli-usage.md)。例如：
+
+~~~bash
+av --project /path/to/project report import --task-id ISSUE-123 --file /path/to/findings.json --dry-run
+av --project /path/to/project report import --task-id ISSUE-123 --file /path/to/findings.json
+~~~
+
+仅需执行一次 `av report start` 建立该需求的档案；同一 `--task-id` 的不同轮次继续复用原报告。报告生成、导入、网络检查或写入异常**不影响正常开发、测试及交付**。
+
+
 - JSON 和静态 HTML 默认保存在**被审查项目**的 `.adversarial-verification/reports/`；如果该项目有旧版 Skill 的有效归档目录，会优先复用。
 - 同一个稳定 `--task-id` 的不同轮次复用同一个报告，不创建多个平行档案。
 - 报告目录加入所在 Git 仓库的本地 `.git/info/exclude`，**不是可提交的 `.gitignore`**；若不安全，脚本会拒绝写入。

@@ -1,6 +1,6 @@
 # Offline Review Dossier (optional)
 
-The reporting helper is **not a gate**: do not spend more tokens documenting a trivial change than reviewing it. Prefer `av report <command> ...` (or `python3 /path/to/skill/scripts/av.py report <command> ...`) as the standard entrypoint; the original `scripts/review_report.py` remains available with unchanged arguments and JSON output. Use when the user requests an archive, review telemetry, or a concise deliverable. It is a **Python 3 standard-library-only** tool and a self-contained static HTML template (no server or external assets).
+For practical command arguments, JSON batch imports and fallback when the helper fails, read `references/cli-usage.md`. A reporting failure cannot change the Review verdict or stop development. The reporting helper is **not a gate**: do not spend more tokens documenting a trivial change than reviewing it. Prefer `av report <command> ...` (or `python3 /path/to/skill/scripts/av.py report <command> ...`) as the standard entrypoint; the original `scripts/review_report.py` remains available with unchanged arguments and JSON output. Use when the user requests an archive, review telemetry, or a concise deliverable. It is a **Python 3 standard-library-only** tool and a self-contained static HTML template (no server or external assets).
 
 ## One task -> one dossier (important)
 
