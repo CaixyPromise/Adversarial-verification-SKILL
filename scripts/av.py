@@ -299,23 +299,45 @@ def update(yes=False, force=False):
             shutil.rmtree(stage, ignore_errors=True)
 
 
-def install_launcher(dest=None):
-    if os.name == "nt":
-        raise ValueError("Windows: use Python to invoke scripts/av.py")
+def launcher_body(windows=False):
+    """Return the platform launcher, preserving quoted paths with spaces."""
+    script = str(ROOT / "scripts" / "av.py")
+    if windows:
+        # cmd.exe expands %% in batch files; doubling it preserves literal path values.
+        executable = str(sys.executable).replace("%", "%%")
+        script = script.replace("%", "%%")
+        return ('@echo off\r\n'
+                'REM Adversarial Verification launcher\r\n'
+                '"' + executable + '" "' + script + '" %*\r\n'
+                'exit /b %errorlevel%\r\n')
     import shlex
+    return ("#!/bin/sh\n# Adversarial Verification launcher\nexec " +
+            shlex.quote(sys.executable) + " " + shlex.quote(script) + ' "$@"\n')
+
+
+def install_launcher(dest=None, windows=None):
+    """Install a user-local av (POSIX) or av.cmd (Windows) launcher."""
+    windows = (os.name == "nt") if windows is None else windows
     folder = Path(dest).expanduser() if dest else Path.home() / ".local" / "bin"
     folder.mkdir(parents=True, exist_ok=True)
-    launcher = folder / "av"
-    if launcher.exists() and "# Adversarial Verification launcher" not in launcher.read_text(encoding="utf-8"):
-        raise ValueError("Refusing to replace another program at " + str(launcher))
-    body = ("#!/bin/sh\n# Adversarial Verification launcher\nexec " +
-            shlex.quote(sys.executable) + " " + shlex.quote(str(ROOT / "scripts" / "av.py")) + ' "$@"\n')
+    launcher = folder / ("av.cmd" if windows else "av")
+    if launcher.is_symlink():
+        raise ValueError("Refusing to overwrite a symbolic-link launcher: " + str(launcher))
+    if launcher.exists():
+        content = launcher.read_text(encoding="utf-8")
+        if "Adversarial Verification launcher" not in content:
+            raise ValueError("Refusing to replace another program at " + str(launcher))
+    body = launcher_body(windows)
     with tempfile.NamedTemporaryFile("w", encoding="utf-8", dir=folder,
                                      prefix=".av-", delete=False) as f:
         f.write(body)
         tmp = Path(f.name)
-    os.replace(tmp, launcher)
-    launcher.chmod(0o755)
+    try:
+        os.replace(tmp, launcher)
+    finally:
+        tmp.unlink(missing_ok=True)
+    if not windows:
+        launcher.chmod(0o755)
     print("Installed " + str(launcher))
     print("Add the directory to PATH if necessary: " + str(folder))
     return 0
