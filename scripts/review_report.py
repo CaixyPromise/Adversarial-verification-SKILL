@@ -17,6 +17,8 @@ import subprocess
 import sys
 import tempfile
 
+import review_decisions
+
 SCHEMA = "adversarial-verification-report/v1"
 MARKER = ".adversarial-review-archive"
 SKIP_DIRS = {".git", "node_modules", ".venv", "venv", "dist", "build", ".next", "target", "__pycache__"}
@@ -210,7 +212,7 @@ def cmd_start(args, project, json_path, html_path, key):
             "schema": SCHEMA, "identity": key, "task_id": args.task_id,
             "task": args.task, "project": project.name,
             "created_at": now(), "updated_at": now(),
-            "sessions": [], "findings": []
+            "sessions": [], "findings": [], "decisions": []
         }
     if data["sessions"] and data["sessions"][-1].get("ended_at") is None:
         session = data["sessions"][-1]
@@ -338,9 +340,9 @@ def cmd_import(args, data):
     payload = json.loads(raw.decode("utf-8-sig"))
     if not isinstance(payload, dict) or payload.get("schema") != IMPORT_SCHEMA:
         raise ValueError("Import requires schema: " + IMPORT_SCHEMA)
-    _import_record(payload, ("schema", "findings", "fixes", "events"), "document")
+    _import_record(payload, ("schema", "findings", "fixes", "events", "decisions", "resolutions"), "document")
     records = {}
-    for name in ("findings", "fixes", "events"):
+    for name in ("findings", "fixes", "events", "decisions", "resolutions"):
         value = payload.get(name, [])
         if not isinstance(value, list):
             raise ValueError("Import '" + name + "' must be an array")
@@ -359,6 +361,7 @@ def cmd_import(args, data):
     lookup = {}
     findings_out = []
     fixes_out = []
+    decisions_out, resolved_out, decision_lookup = [], [], {}
     for index, item in enumerate(records["findings"], 1):
         _import_record(item,
                        ("key", "id", "title", "category", "severity", "attribution",
@@ -409,6 +412,48 @@ def cmd_import(args, data):
         ), candidate)
         fixes_out.append(outcome["finding_id"])
 
+    for index, item in enumerate(records["decisions"], 1):
+        _import_record(item, ("key", "id", "title", "kind", "context", "scenario",
+                              "evidence", "question", "options", "recommendation",
+                              "blocking", "linked_findings"), "decisions[" + str(index) + "]")
+        key = _import_field(item, "key").strip()
+        if key and key in decision_lookup:
+            raise ValueError("Duplicate decision key: " + key)
+        result = review_decisions.add(
+            candidate, session,
+            decision_id=_import_field(item, "id") or None,
+            title=_import_field(item, "title", required=True),
+            kind=_import_field(item, "kind", "requirement-gap"),
+            context=_import_field(item, "context"),
+            scenario=_import_field(item, "scenario"),
+            evidence=_import_field(item, "evidence"),
+            question=_import_field(item, "question"),
+            options=item.get("options", []),
+            recommendation=_import_field(item, "recommendation"),
+            blocking=item.get("blocking", False),
+            linked_findings=item.get("linked_findings", [])
+        )
+        if key:
+            decision_lookup[key] = result["decision_id"]
+        decisions_out.append(result["decision_id"])
+
+    for index, item in enumerate(records["resolutions"], 1):
+        _import_record(item, ("id", "ref", "answer", "source", "status"),
+                       "resolutions[" + str(index) + "]")
+        explicit_id, ref = _import_field(item, "id"), _import_field(item, "ref")
+        if bool(explicit_id) == bool(ref):
+            raise ValueError("Resolution requires exactly one of id or ref")
+        target = explicit_id or decision_lookup.get(ref)
+        if not target:
+            raise ValueError("Unknown decision key in resolution: " + ref)
+        result = review_decisions.resolve(
+            candidate, session, decision_id=target,
+            answer=_import_field(item, "answer", required=True),
+            source=_import_field(item, "source", required=True),
+            status=_import_field(item, "status", "resolved")
+        )
+        resolved_out.append(result["decision_id"])
+
     for index, item in enumerate(records["events"], 1):
         _import_record(item, ("kind", "text"), "events[" + str(index) + "]")
         kind = _import_field(item, "kind", "note")
@@ -421,6 +466,7 @@ def cmd_import(args, data):
     outcome = {"action": "validated_batch" if args.dry_run else "imported_batch",
                "round": session["round"], "entries": amount,
                "finding_ids": findings_out, "fixed_ids": fixes_out,
+               "decision_ids": decisions_out, "resolved_ids": resolved_out,
                "event_count": len(records["events"])}
     return candidate, outcome
 
@@ -463,6 +509,27 @@ def main():
             p.add_argument("--input-tokens", type=int)
             p.add_argument("--output-tokens", type=int)
             p.add_argument("--token-source")
+    p_decision = sub.add_parser("decision", help="User confirmations/feedback, separate from code defects")
+    actions = p_decision.add_subparsers(dest="decision_action", required=True)
+    p_add = actions.add_parser("add", help="Create or update a pending decision")
+    p_add.add_argument("--task-id", required=True)
+    p_add.add_argument("--id", help="Existing pending D### decision")
+    p_add.add_argument("--title", required=True)
+    p_add.add_argument("--kind", choices=review_decisions.KINDS, default="requirement-gap")
+    p_add.add_argument("--context", default="")
+    p_add.add_argument("--scenario", default="")
+    p_add.add_argument("--evidence", default="")
+    p_add.add_argument("--question", default="")
+    p_add.add_argument("--options-json", default="[]", help="JSON array of {id,text,tradeoff} options")
+    p_add.add_argument("--recommendation", default="")
+    p_add.add_argument("--blocking", action="store_true")
+    p_add.add_argument("--linked-finding", action="append", default=[])
+    p_resolve = actions.add_parser("resolve", help="Record a user-confirmed resolution")
+    p_resolve.add_argument("--task-id", required=True)
+    p_resolve.add_argument("--id", required=True)
+    p_resolve.add_argument("--answer", required=True)
+    p_resolve.add_argument("--source", required=True, help="User confirmation or deferral source")
+    p_resolve.add_argument("--status", choices=("resolved", "deferred"), default="resolved")
     args = parser.parse_args()
     try:
         project = project_root(args.project)
@@ -481,13 +548,31 @@ def main():
                 outcome = cmd_fix(args, data)
             elif args.command == "import":
                 data, outcome = cmd_import(args, data)
+            elif args.command == "decision":
+                session = active_session(data)
+                if args.decision_action == "add":
+                    try:
+                        options = json.loads(args.options_json)
+                    except json.JSONDecodeError as exc:
+                        raise ValueError("--options-json must be a JSON array") from exc
+                    outcome = review_decisions.add(
+                        data, session, decision_id=args.id, title=args.title,
+                        kind=args.kind, context=args.context, scenario=args.scenario,
+                        evidence=args.evidence, question=args.question,
+                        options=options, recommendation=args.recommendation,
+                        blocking=args.blocking, linked_findings=args.linked_finding)
+                else:
+                    outcome = review_decisions.resolve(
+                        data, session, decision_id=args.id,
+                        answer=args.answer, source=args.source, status=args.status)
             elif args.command == "event":
                 outcome = cmd_event(args, data)
             elif args.command == "finish":
                 outcome = cmd_finish(args, data)
             else:
                 outcome = {"action": args.command, "rounds": len(data["sessions"]),
-                           "findings": len(data["findings"])}
+                           "findings": len(data["findings"]),
+                           "decisions": len(data.get("decisions", []))}
             if args.command not in ("show",) and not (args.command == "import" and
                     (args.dry_run or outcome["action"] == "already_imported")):
                 store(data, path, html)
