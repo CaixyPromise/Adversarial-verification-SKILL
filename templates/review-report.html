@@ -179,9 +179,8 @@ $("copyAllDecisions").addEventListener("click",e=>{
  if(!pendingDecisions.length)return;
  copyContent(pendingDecisions.map(d=>decisionMarkdown(d,true)).join("\n\n---\n\n"),e.currentTarget);
 });
-renderDecisions();
-
 const block=(label,value,extra)=>'<div class="block '+(extra||"")+'"><label>'+safe(label)+'</label><p>'+safe(txt(value))+'</p></div>';
+renderDecisions();
 function renderFindings(){
  const q=$("search").value.toLowerCase(),severity=$("severity").value,status=$("status").value,attribution=$("attribution").value;
  const selected=findings.filter(f=>{
