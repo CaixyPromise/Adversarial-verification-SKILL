@@ -10,8 +10,8 @@ It reviews whether an implementation meets the **actual user intent**, preserves
 
 1. **Understand:** determine intended behavior, key business flow, invariants and material unknowns from the user request and codebase.
 2. **Assess:** score complexity, impact and uncertainty, 0–2 each; total 0–6.
-3. **Review:** cover requirements, affected paths, regressions and relevant technical risks in one broad round.
-4. **Resolve:** address proven blockers at their root cause and ask a human for material unresolved business decisions.
+3. **Review:** complete relevant A/B/C paths, negative/business branches and test checks **before routine fixes**; consolidate all evidence-backed findings in one review batch.
+4. **Resolve:** group duplicate/root-related findings and repair them coherently; ask a human for material unresolved business decisions.
 5. **Finish:** targeted re-verification, explicit coverage and residual risks; no indefinite PASS-chasing loop.
 
 ## Review budget: up to three verifier subagents
@@ -80,6 +80,7 @@ Review can record new proposed business rules independently of confirmed defects
 
 - `SKILL.md` — authoritative workflow and 0–3 agent allocation.
 - `references/review-playbook.md` — role-specific investigation methods and optional engineering probes.
+- `references/reasoning-convergence.md` — conclusion-first examples, scoped review completion before batch repair, targeted re-verification and finite investigation.
 - `references/behavioral-testing.md` — black-box/complex business-chain test review and explicit approval for new product rules.
 - `references/failure-attribution.md` — evidence-based root-cause ownership for upstream browsers/libraries, project integrations and CI environments, with bounded diagnostics.
 - `references/engineering-quality.md` — evidence-based engineering-quality principles.

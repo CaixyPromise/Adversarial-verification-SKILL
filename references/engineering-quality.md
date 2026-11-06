@@ -6,7 +6,7 @@
 
 A good change **solves the requested problem correctly**, preserves important contracts and safety properties, and is **no more complex than justified**, while leaving the relevant codebase understandable, testable and operable.
 
-Review should improve overall code health **without blocking useful delivery for hypothetical perfection**. Avoid applying every item to every change. Focus on risks exposed by the diff and its affected execution paths.
+Review should improve overall code health **without blocking useful delivery for hypothetical perfection**. Equally, finding an easy defect does not establish sufficient coverage: examine the complete *relevant* risk surface before ordinary batch repair, and reserve later rounds for targeted regression checks. See `reasoning-convergence.md`. Avoid applying every item to every change. Focus on risks exposed by the diff and its affected execution paths.
 
 For a quality concern, the reviewer should be able to state:
 

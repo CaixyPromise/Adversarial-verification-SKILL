@@ -76,12 +76,13 @@ Known business invariants and unknowns: [...]
 Changed paths: [...]
 Implementation summary (context only; never the expected answer): [...]
 Relevant repository instructions and safe verification commands: [...]
-Deliver: scoped coverage, evidence-backed blocking defects,
-non-blocking improvements, unverified risks, and verification limits.
+Deliver: specific paths/branches/tests inspected and scoped coverage completed;
+all evidence-backed blocking defects in one batch, non-blocking improvements,
+unverified material gaps and verification limits. Do not stop at first finding.
 Independently inspect applicable surrounding code/history; do not edit.
 ```
 
-For investigation tactics, read your assigned role section in `references/review-playbook.md`. When a test failure could originate in a dependency, browser/driver, runtime, OS or CI environment, selectively consult `references/failure-attribution.md` before modifying code or tooling. For material behavioral/test gaps or unspecified new product rules, consult `references/behavioral-testing.md` as needed. For material engineering-quality judgments consult `references/engineering-quality.md`; when **file/module organization or code naming** warrants it, use `references/code-structure-governance.md`; when **changed data/cache/transaction** paths warrant it, use `references/data-access-practices.md`; when **frontend/UI** changes warrant it, use `references/frontend-experience.md`. **Read selectively: no extra agent roles, mandatory checklists or quality scores.**
+For investigation tactics, read your assigned role section in `references/review-playbook.md`. For repeated low-yield analysis, fragmented repair cycles or inconclusive handoffs, apply `references/reasoning-convergence.md` (contains explicit good/bad output and coverage examples). When a test failure could originate in a dependency, browser/driver, runtime, OS or CI environment, selectively consult `references/failure-attribution.md` before modifying code or tooling. For material behavioral/test gaps or unspecified new product rules, consult `references/behavioral-testing.md` as needed. For material engineering-quality judgments consult `references/engineering-quality.md`; when **file/module organization or code naming** warrants it, use `references/code-structure-governance.md`; when **changed data/cache/transaction** paths warrant it, use `references/data-access-practices.md`; when **frontend/UI** changes warrant it, use `references/frontend-experience.md`. **Read selectively: no extra agent roles, mandatory checklists or quality scores.**
 
 If subagents are not available, do a scoped self-review and disclose the lack of independent verification.
 
@@ -101,6 +102,8 @@ Apply three tests: (1) would the artifact make sense without the conversation? (
 **Failure ownership before repair:** a failed test or upstream stack trace alone does not establish a project defect. Check installed versions, documented API contracts and low-cost diagnostics; distinguish project, upstream, environment and unknown attribution. Never silently download alternative browsers, install dependencies, alter global caches or generate large traces merely to obtain green tests. Request explicit approval for unrequested substantial downloads/installations. Report an upstream limitation or blocked verification instead of inventing a local workaround. See `references/failure-attribution.md`.
 
 Use the most informative feasible evidence: code-path analysis, focused tests, direct execution, runtime outputs/logs, or relevant existing test suites. A direct run is strongly preferred for executable behavioral changes but not mandatory for documentation/config-only changes or unsafe environments. Do not treat green tests, HTTP 200, or exit status 0 as sufficient evidence of business correctness.
+
+**Coverage-before-repair gate:** For material changes, first bound relevant entry paths, business branches, direct callers/integrations, significant failures and tests. Each assigned verifier must **finish its entire relevant risk scope** and return inspected paths/scenarios, evidence-backed findings and unreviewed material gaps, **before the parent starts ordinary repairs**. Finding one or two issues is not completion. The parent then consolidates duplicate/root-related findings into one batch and fixes them coherently. An urgent safety issue, true investigation blocker or human decision may justify interrupting the pass; disclose unfinished coverage. See `references/reasoning-convergence.md`.
 
 **Do not stop at the first one or two bugs.** Finish each assigned material risk area, combine subagent results, remove duplicates, challenge weak findings and report one coherent set. In particular, **compare implementation consistency against existing patterns before recommending new abstractions or duplicate logic**. The parent reconciles disagreements using requirements and evidence, not majority voting. Aim for sufficient coverage, not an impossible guarantee of finding every bug. State meaningful gaps.
 
@@ -123,9 +126,9 @@ Group results as **Blocking defects**, **Non-blocking improvements**, and **Unve
 
 ## 5. Repair, reverify, and stop
 
-The parent validates findings, fixes confirmed defects at their **business/engineering root cause**, and does not game fixtures, weaken contracts, swallow errors, or silently alter product policy.
+The parent validates the **consolidated findings after scoped coverage is complete**, groups shared causes and repairs confirmed defects in a coherent batch at their **business/engineering root cause**. Do not fix the first issue then ask the same reviewers to resume an unfinished broad review. Do not game fixtures, weaken contracts, swallow errors, or silently alter product policy.
 
-Run **one broad review round** with applicable independent scopes. After changes, **targeted re-verification** must cover each repaired issue and affected regression paths; do not restart the entire review by default. Re-scope only if the repair materially expands the change or reveals a new independent high-risk area.
+Run **one complete coverage-first review round** with applicable independent scopes; collect all material findings before routine repair. After changes, **targeted re-verification** must cover each repaired issue and affected regression paths; do not restart the entire review by default. If re-verification finds an issue in an **unchanged original path**, identify it as a missed first-round coverage gap, inspect the affected scope together, consolidate findings and avoid drip-feed repairs. Re-scope only paths materially changed or newly exposed by a repair. Re-scope only if the repair materially expands the change or reveals a new independent high-risk area.
 
 **Stop** when sufficient applicable coverage is complete and no known blockers remain; when a human decision or environment prevents necessary verification; or when the same blocker has survived **two unsuccessful repair-and-reverify cycles**. In the latter cases, report the blocker, evidence, attempts and what would unblock it. Never keep looping merely to obtain a success label. An unresolved blocker must not be described as ready.
 
@@ -135,6 +138,8 @@ Use exactly one delivery assessment:
 - `CHANGES_NEEDED` — confirmed blocking defects remain.
 - `NEEDS_DECISION` — a material business/product decision blocks a sound conclusion.
 - `PARTIAL` — necessary verification is unavailable or incomplete; describe what is and is not supported.
+
+**Conclusion-first output:** State what evidence establishes, then decisive supporting facts, only uncertainties that change a real decision, and the executed/next action. Avoid repeated chains of `not / cannot prove / does not imply` that postpone a judgment without new information. After two consecutive observable investigation attempts yield no new evidence, narrower scope or decision progress, stop that path and make a bounded judgment, change to a distinct high-value test, or report the exact blocker. This is not permission to skip critical required verification. See `references/reasoning-convergence.md` for contrasting examples.
 
 Finish concisely with: **independently established requirement/flow, risk score and role-based verifier allocation, A/B/C coverage as applicable, findings with evidence and change attribution, residual risks, final assessment**. No artificial PASS quotas or repeated full-review gates.
 

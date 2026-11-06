@@ -1,13 +1,13 @@
 # Review Playbook — Role-guided Engineering Review
 
-Use only role sections and probes relevant to the change. These are **reasoning techniques**, not a ritual checklist. The risk score, 0–3 agent budget and stop criteria live in `SKILL.md`. Use `references/project-conventions.md` for project-aware review; apply `references/engineering-quality.md`, `references/code-structure-governance.md`, `references/data-access-practices.md`, `references/frontend-experience.md`, `references/behavioral-testing.md` and `references/failure-attribution.md` **only when relevant**.
+Use only role sections and probes relevant to the change. These are **reasoning techniques**, not a ritual checklist. The risk score, 0–3 agent budget and stop criteria live in `SKILL.md`. For review completeness, batched repair and result wording, see `references/reasoning-convergence.md` when relevant. Use `references/project-conventions.md` for project-aware review; apply `references/engineering-quality.md`, `references/code-structure-governance.md`, `references/data-access-practices.md`, `references/frontend-experience.md`, `references/behavioral-testing.md` and `references/failure-attribution.md` **only when relevant**.
 
 ## Common method for every verifier
 
 1. **Derive a provisional expected behavior and critical invariants independently** from the original requirement and trusted contracts, *before treating implementation notes as persuasive evidence*. Resolve ambiguities using real product and repository evidence; do not assume old code or tests are the specification.
 2. Map the change to its **real execution/data path**, including relevant surrounding code, not just modified lines.
 3. Form the strongest realistic **failure hypothesis**; inspect or probe it using safe, high-signal evidence. Inspect whether real black-box contract assertions and test fixtures would catch that failure.
-4. Finish the **relevant coverage** before delivering a consolidated report. Distinguish confirmed defects, design tradeoffs and unknowns.
+4. Finish the **entire bounded assigned scope** before returning a consolidated report—not only the first or second defect. Supply inspected paths, business branches and meaningful test coverage plus outstanding gaps; do not hand off routine repairs mid-audit. Distinguish confirmed defects, design tradeoffs and unknowns.
 5. Provide source locations, commands and observed results when actually executed. Never invent test runs, guarantees or business requirements.
 
 ## Agent A — Requirement & behavior correctness
@@ -21,7 +21,7 @@ Use only role sections and probes relevant to the change. These are **reasoning 
 - Inspect the **test cases** and actual outputs against intended semantics; challenge happy-path-only fixtures, implementation-mirroring mocks and weak assertions. Select black-box negative paths and multi-step business chains for high-risk cases; check final state, side effects and invariants, not just a successful call.
 - When a material rule admits multiple valid interpretations and evidence cannot resolve it, provide the exact **human decision required**; never quietly impose a preference. Do not promote a newly imagined rule outside the approved scope into an acceptance test or implementation before the user explicitly confirms; report it as a proposal instead.
 
-**Deliver:** requirement coverage, observed behavior versus intended behavior, missing cases, violated invariants, unresolved product decisions.
+**Deliver:** specific entry paths/branches/tests covered and missing material scenarios, observed versus expected behavior, all proven scoped findings in one batch, violated invariants and unresolved product decisions.
 
 ## Agent B — Implementation consistency & pragmatic reuse
 
@@ -58,7 +58,7 @@ An optional refactor must not silently expand the user's requested change. Repor
 
 **Useful evidence:** targeted symbol/reference searches, call/data flow, comparable implementations, existing tests and selective read-only history. If history is unavailable, use current code and disclose the limit.
 
-**Deliver:** behavioral and contract consistency, confirmed duplicated/diverging business logic, concrete reuse/extraction opportunities with tradeoffs, and reasons to intentionally leave code separate.
+**Deliver:** relevant changed code and direct callers/dependencies inspected, behavioral/contract consistency, all confirmed scoped defects in one batch, justified reuse suggestions and material unreviewed gaps.
 
 ## Agent C — System-level engineering risk
 
@@ -73,7 +73,7 @@ An optional refactor must not silently expand the user's requested change. Repor
 - Choose **one or more high-signal probes** only for material risks: an unauthorized access, a duplicate concurrent mutation, a failed dependency, an old-data migration, a realistic workload comparison, or a restart/reconnect scenario.
 - Separate measured effects from plausible hypotheses; do not invent scalability, distributed or security concerns when not relevant. State attribution confidence and disclose blocked external verification rather than guessing fault ownership.
 
-**Deliver:** concrete failure modes, triggering conditions, estimated impact and scope, directly observed or code-backed evidence, residual untested risks.
+**Deliver:** all material scoped failure modes and their evidence (security, persistence, concurrency, performance and upstream ownership as applicable), inspected paths/probes, residual unverified risks; do not end upon the first failing test.
 
 ## Selective techniques (not mandatory for each role)
 
@@ -101,4 +101,4 @@ Do **not** turn an unrelated historic defect into a required refactor for the cu
 
 When multiple reviewers find the same root cause, **merge** their evidence rather than counting two bugs. When they disagree, trace the requirement and code path; the parent arbitrates with evidence, not votes. Parent verifies that A/B/C relevant scopes were covered even when only one or two reviewers were assigned.
 
-Report each blocking finding as **violated requirement/invariant → trigger/code path → expected/actual evidence → change attribution → impact → smallest sound repair**. Keep improvements and unverified possibilities separate. After repair, rerun the relevant failure probe plus the affected regression paths. Do not force all reviewers to repeat a complete review merely to change the final assessment.
+Report each blocking finding as **violated requirement/invariant → trigger/code path → expected/actual evidence → change attribution → impact → smallest sound repair**. Keep improvements and unverified possibilities separate. After the parent batches fixes by shared root cause, rerun the relevant failure probes plus affected regression paths. A new issue on an **unchanged path already within the original scope** is a first-review coverage miss, not normal incremental discovery; close that scope gap coherently before another repair batch. Do not force all reviewers to repeat a complete review merely to change the final assessment.

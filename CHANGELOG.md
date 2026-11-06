@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.7 — 2026-11-06
+
+- Introduce conclusion-first, evidence-based output guidance with explicit anti-examples of repetitive negation/hedging and concrete reference reviews.
+- Establish a coverage-before-repair gate: complete all applicable A/B/C risk surfaces and tests before consolidating findings and batching routine repairs, to prevent drip-feed multi-round discovery.
+- Treat late findings on unchanged original paths as coverage gaps, not routine re-review; retain targeted verification, 0–3 reviewer cap, material safety exceptions and bounded stopping rules.
+
 ## 0.3.6 — 2026-11-02
 
 - Fall back to GitHub Git transport when the commit API returns HTTP 403 or 429, avoiding API rate-limit failures during explicit updates.
